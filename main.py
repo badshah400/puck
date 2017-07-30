@@ -1,5 +1,5 @@
-#!/usr/bin/python3
-# vim: set ai et ts=4 sw=4 tw=80:
+#!/usr/bin/python
+# vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 import sys
 import os
@@ -10,7 +10,15 @@ from lxml import etree
 import requests as rq
 from io import BytesIO
 import feedparser as fp
-from subprocess import run, PIPE
+from subprocess import call, check_output, PIPE
+from tempfile import NamedTemporaryFile
+
+import osc.conf
+import osc.core
+
+# initialize osc configuration
+osc.conf.get_config()
+apiurl = osc.conf.config['apiurl']
 
 errs = []
 
@@ -65,7 +73,11 @@ def ghLastVer(ghuser, ghrepo):
         return(ver)
 
 if __name__ == '__main__':
+    re_s0  = re.compile('Source0?:.*')
+    re_ver = re.compile('Version:.*')
+
     f = open('pkglist.txt', 'r')
+
     for line in f:
         # IGNORE COMMENTED LINES
         if line[0] == '#':
@@ -80,21 +92,46 @@ if __name__ == '__main__':
 #        print(l)
         prj = l[0]
         pkg = l[1].rstrip('\n')
+        u   = osc.core.makeurl(apiurl, ['source', prj, pkg, pkg + '.spec'],
+                               query = { 'expand': 1 })
 
-        pr = run(['./oscGetPkgVer.sh', prj, pkg], stdout=PIPE, stderr=PIPE)
-        reserr = pr.stderr.decode('utf-8')
-        if len(reserr) > 0:
-            errs.append('{:s}/{:s}: {:s}'.
-                        format(prj, pkg, reserr.rstrip('\n')))
+        fi = osc.core.http_GET(u)
+        try:
+            spec = ''.join(fi.readlines())
+        except:
+            print("Error fetching spec file.")
+        
+        cachedir = path.join('.', '.osc')
+        if not path.exists(cachedir):
+            os.mkdir(cachedir)
+        
+        with NamedTemporaryFile(mode='w', suffix='.spec', dir=cachedir) as f:
+            f.write(spec)
+            f.flush()
+            
+#            print(f.name)
+            src0 = check_output(['rpmdev-spectool', '-S', f.name])
+#            print(src0)
+        
+        if src0:
+            srcURL = (re_s0.search(src0).group()).split(' ')[-1]
+        else:
+            srcURL = re.search(r'Source0?:.*', spec).group().split(' ')[-1]
+#        print(srcURL)
+        ghuser, ghrepo = srcURL.split('/')[3:5]
+        if not re.search(r'github\.com', srcURL):
+            errs.append(r'{:s}/{:s}: Source does not point to github URL'
+                         .format(prj,pkg))
             continue
+        
+        specVer = (re_ver.search(spec).group()).split(' ')[-1]
+#        print(specver)
+        
+        ghVer     = ghLastVer(ghuser, ghrepo)
 
-        resstr = pr.stdout.decode('utf-8').split()
-        oscPkgVer = resstr[-1]
-        ghVer     = ghLastVer(resstr[0], resstr[1])
-
-        newer = '↑' if newver(ghVer, oscPkgVer) else ''
+        newer = u'↑'.encode('utf-8') if newver(ghVer, specVer) else ''
         print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, oscPkgVer, ghVer, newer))
+              .format(prj+'/'+pkg, specVer, ghVer, newer))
 
 if errs:
     print("\nCollected error messages")    
