@@ -12,11 +12,9 @@ class Errors:
         if self.errs:
             nerrs = len(self.errs)
             if nerrs == 1:
-                print("\nThere was an error.")
-                for err in self.errs:
-                    print(err)
+                print('\nThere was an error\n  * {:s}'.format(self.errs[0]))
             else:
-                print("\nThere were %d errors." % len(self.errs))
+                print('\nThere were %d errors' % len(self.errs))
                 print(self.errhead)
                 for err in self.errs:
-                    print(err)
+                    print('  * {:s}'.format(err))
