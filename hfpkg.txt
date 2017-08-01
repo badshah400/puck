@@ -1,0 +1,10 @@
+Education/dvegas
+science/ThePEG
+science/YODA
+science/Rivet
+science/ColorFull
+science/Herwig
+science/HepMC
+science/LHAPDF
+science/rk
+science/SHERPA-MC
