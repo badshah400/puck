@@ -19,15 +19,26 @@ apiurl = osc.conf.config['apiurl']
 
 errs = Errors()
 
-def hepVer(prj):
+def hepVer(prj, pkgext=None):
+    exts = ['.bz2', '.gz', '.tar', '.tgz', '.xz', '.7z', '.zip', '.rar']
     response = urllib2.urlopen('https://www.hepforge.org/downloads/' + prj)
     html = response.read()
     strongs = etree.HTML(html).findall('.//strong')
     try:
-        strongver=strongs[1]
+        if not strongs:
+            raise Exception("Not listed on hepforge downloads page")
+        for i in range(1,len(strongs)-1,3):
+            strongver = strongs[i]
+            strext    = '.' + strongs[i+1][0].get('href').split('.')[-1]
+            if not pkgext:
+                if strext in exts:
+                    break
+            else:
+                if strext == pkgext:
+                    break
     except:
         return('-')
-    return(strongver.text)
+    return(strongver.text.strip())
 
 
 if __name__ == '__main__':
@@ -42,7 +53,7 @@ if __name__ == '__main__':
         if re.search(r'hepforge\.org', url):
             re_http = re.compile('^https?://')
             hepprj = re_http.sub('', url).split('.')[0]
-            
+
             # Handle URL's in the form: http://projects.hepforge.org/pyfeyn/
             if hepprj == 'projects':
                 hepprj = re_http.sub('', url).rstrip('/').split('/')[-1]
