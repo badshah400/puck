@@ -40,8 +40,13 @@ if __name__ == '__main__':
 #        print(url)
 #        print(srcURL)
         if re.search(r'hepforge\.org', url):
-            re_http = re.compile('https?://')
+            re_http = re.compile('^https?://')
             hepprj = re_http.sub('', url).split('.')[0]
+            
+            # Handle URL's in the form: http://projects.hepforge.org/pyfeyn/
+            if hepprj == 'projects':
+                hepprj = re_http.sub('', url).rstrip('/').split('/')[-1]
+
         elif re.search(r'hepforge\.org', srcURL):
             hepprj = srcURL.split('/')[4]
         else:
