@@ -8,6 +8,7 @@ multimedia:apps/amsynth
 multimedia:apps/lollypop
 multimedia:apps/lollypop-portal
 multimedia:apps/vocal
+network:pidgin/pidgin-embeddedvideo
 Publishing/texworks
 science/apfel
 science/arpack-ng
