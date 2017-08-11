@@ -4,28 +4,19 @@
 def NewUpstreamVer(ver1, ver2):
     arr1 = ver1.split('.')
     arr2 = ver2.split('.')
-    len1 = len(arr1)
-    len2 = len(arr2)
     res  = False
+
+    for i in range(min(len(arr1), len(arr2))):
+        # PAD WITH HIGHEST ASCII CHARACTER IF SUBSTR LENGTH ARE NOT IDENTICAL
+        # E.G. 2.0.1beta1 > 2.0.1 but 2.0.1beta1 < 2.0.1~~~~~
+        # FIXME: DO WE WANT TO HANDLE CORNER CASES LIKE 2.1 > 2.1.BETA1?
+        lendiff = len(arr1[i]) - len(arr2[i])
+        if lendiff > 0:
+            arr2[i] += ('~' * abs(lendiff))
+        elif lendiff < 0:
+            arr1[i] += ('~' * abs(lendiff))
     try:
-        if len1 <= len2:
-            for i in range(0, len1):
-                if int(arr1[i]) > int(arr2[i]):
-                    return True
-                elif int(arr1[i]) < int(arr2[i]):
-                    return False
-                else:
-                    continue
-        elif len1 > len2:
-            for i in range(0, len2):
-                if int(arr1[i]) > int(arr2[i]):
-                    return True
-                elif int(arr1[i]) < int(arr2[i]):
-                    return False
-                else:
-                    continue
-            res = True
+        return True if arr1 > arr2 else False
     except:
         raise
     return(res)
-
