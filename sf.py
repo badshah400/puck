@@ -28,24 +28,30 @@ def sfLastVer(sfprj, srcf, oldver):
     ver     = oldver
     srcname, srcext = path.splitext(srcf)
     
-    srcnamenover = srcf.replace(oldver, '')
-#    print(srcnamenover)
+    vertemp = '[0-9]+' + ('\.?[0-9]*' * 6)
+    anyver  = re.compile(vertemp)
+    srcf = srcf.replace(oldver, vertemp)
+    srcname_anyver = re.compile(srcf)
         
     for item in d.entries:
         title         = item.title
         itname        = title.split('/')[-1]
+        matsrc        = srcname_anyver.search(itname)
+        matver        = anyver.search(itname)
+        if not matsrc:
+            continue
         itname, itext = path.splitext(itname)
 #        print(itext)
         if itext == srcext:
-            ver = itname.strip(srcnamenover)
+            ver = matver.group().rstrip('.')
             break
             
     return (ver)
         
 if __name__ == '__main__':
-    sf_dlurl_re  = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
-    sf_prjurl_re = re.compile('\.sourceforge\.net/?|\.sf\.net/?')
-
+    sf_dlurl_re   = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
+    sf_prjurl_re1 = re.compile('sourceforge\.net/projects/?|sf\.net/projects/?')
+    sf_prjurl_re2 = re.compile('\.sourceforge\.net/?|\.sf\.net/?')
     f = PrjPkgList('sfpkg.txt')
     for prj, pkg in f.List():
         stags     = SpecTags(prj, pkg)
@@ -62,7 +68,11 @@ if __name__ == '__main__':
             # http://downloads.sourceforge.net/<sfprj>/<src_file>
             sfprj = src_parts[1]
 
-        elif (sf_prjurl_re.search(stags.Url())):
+        elif (sf_prjurl_re1.search(stags.Url())):
+            # http://sourceforge.net/projects/mathmod/
+            sfprj = stags.Url().split('/')[4]
+
+        elif (sf_prjurl_re2.search(stags.Url())):
             # If the srcURL does not point to a dowload(s).s*f*.net
             # then we look at the spec file's URL, and split the sfprj from
             # http://<sfprj>.sourceforge.net/
