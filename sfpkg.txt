@@ -1,3 +1,11 @@
 devel:libraries:c_c++/armadillo
+science/avogadro
+science/blitz
+science/glucat
 science/mathgl
+science/mathmod
+science/matio
 science/maxima
+science/PlotDigitizer
+science/plplot
+science/wcalc
