@@ -44,7 +44,7 @@ def sfLastVer(sfprj, srcf, oldver):
         
 if __name__ == '__main__':
     sf_dlurl_re  = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
-    sf_prjurl_re = re.compile('\.sourceforge.net/?$|\.sf.net/?$')
+    sf_prjurl_re = re.compile('\.sourceforge\.net/?|\.sf\.net/?')
 
     f = PrjPkgList('sfpkg.txt')
     for prj, pkg in f.List():
