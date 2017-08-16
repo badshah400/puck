@@ -27,12 +27,12 @@ def sfLastVer(sfprj, srcf, oldver):
     d       = fp.parse(url)
     ver     = oldver
     srcname, srcext = path.splitext(srcf)
-    
-    vertemp = '[0-9]+' + ('\.?[0-9]*' * 6)
+
+    vertemp = '[0-9]+' + '(\.?[0-9]){0,6}' + '([aA]lpha.*)?([Bb]eta.*)?'
     anyver  = re.compile(vertemp)
     srcf = srcf.replace(oldver, vertemp)
     srcname_anyver = re.compile(srcf)
-        
+
     for item in d.entries:
         title         = item.title
         itname        = title.split('/')[-1]
@@ -45,9 +45,9 @@ def sfLastVer(sfprj, srcf, oldver):
         if itext == srcext:
             ver = matver.group().rstrip('.')
             break
-            
+
     return (ver)
-        
+
 if __name__ == '__main__':
     sf_dlurl_re   = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
     sf_prjurl_re1 = re.compile('sourceforge\.net/projects/?|sf\.net/projects/?')
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         src_parts = src_url.split('/')[2:] # Drop the leading 'http://'
         src_file  = src_parts[-1]
         specVer   = stags.Version()
-        
+
         sfprj     = ''
 
         # Figure out SF project name
