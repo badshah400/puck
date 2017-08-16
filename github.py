@@ -13,7 +13,6 @@ from specparse import SpecTags
 from vercomp import NewUpstreamVer
 from pkglistparse import PrjPkgList
 from errors import Errors
-import osc.conf
 
 # initialize osc configuration
 osc.conf.get_config()
