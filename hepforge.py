@@ -80,4 +80,29 @@ if __name__ == '__main__':
         print('{:45s} {:15s} {:15s} {:15s}'
               .format(prj+'/'+pkg, specVer, hepver.encode('utf-8'), newer))
 
+### PYTHIA CHECK ###
+pythia_url = 'http://home.thep.lu.se/~torbjorn/pythia82html/UpdateHistory.html'
+response   = urllib2.urlopen(pythia_url)
+html       = response.read()
+li_all     = etree.HTML(html).findall('.//li')
+li0_text   = li_all[0].text
+
+pythia_ver, rel_date = li0_text.split(':')
+rel_date   = rel_date.strip()
+
+prj = 'science'
+pkg = 'pythia'
+sp  = SpecTags(prj, pkg)
+specVer = sp.Version()
+try:
+    newer = (u'↑'.encode('utf-8') if NewUpstreamVer(pythia_ver, specVer)
+             else '')
+except:
+    newer = ''
+    errs.Append(r'{:s}/{:s}: Invalid version from Pythia webpage'
+                 .format(prj,pkg))
+
+print('{:45s} {:15s} {:15s} {:15s}'
+      .format(prj+'/'+pkg, specVer, pythia_ver.encode('utf-8'), newer))
+
 errs.Print()
