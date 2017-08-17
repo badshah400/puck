@@ -29,26 +29,30 @@ class SpecTags:
             spec = ''.join(fi.readlines())
         except:
             print("Error fetching spec file.")
-        
+
         cachedir = path.join('.', '.osc')
         if not path.exists(cachedir):
             os.mkdir(cachedir)
-        
+
         with NamedTemporaryFile(mode='w', suffix='.spec', dir=cachedir) as f:
             f.write(spec)
             f.flush()
-            
+
 #            print(f.name)
-            src0 = check_output(['rpmdev-spectool', '-S', f.name])
+            try:
+                spec_exp = check_output(['rpmspec', '-P', f.name], stderr=PIPE)
+                self.Ver = self.re_ver.search(spec_exp).group().split(' ')[-1]
+            except:
+                spec_exp = check_output(['rpmdev-spectool', '-S', f.name])
+                self.Ver = self.re_ver.search(spec).group().split(' ')[-1]
 #            print(src0)
-        
-        if src0:
-            self.srcURL = self.re_src0.search(src0).group().split(' ')[-1]
+
+        if spec_exp:
+            self.srcURL = self.re_src0.search(spec_exp).group().split(' ')[-1]
         else:
             self.srcURL = self.re_src0.search(spec).group().split(' ')[-1]
 #        print(srcURL)
-        
-        self.Ver = self.re_ver.search(spec).group().split(' ')[-1]
+
         self.URL = self.re_url.search(spec).group().split()[-1]
 #        print(specver)
 
