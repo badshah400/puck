@@ -26,25 +26,35 @@ def sfLastVer(sfprj, srcf, oldver):
     url     = urlTemp.substitute(prj=sfprj)
     d       = fp.parse(url)
     ver     = oldver
+    verfind = False
     srcname, srcext = path.splitext(srcf)
 
     vertemp = '[0-9]+' + '(\.?[0-9]){0,6}' + '([aA]lpha.*)?([Bb]eta.*)?'
-    anyver  = re.compile(vertemp)
-    srcf = srcf.replace(oldver, vertemp)
-    srcname_anyver = re.compile(srcf)
+    anyver  = re.compile(r'[^a-zA-Z]{:s}'.format(vertemp))
+    srcf    = srcf.replace(oldver, vertemp)
+    srcname_anyver = re.compile(r'{:s}'.format(srcf))
 
     for item in d.entries:
-        title         = item.title
-        itname        = title.split('/')[-1]
-        matsrc        = srcname_anyver.search(itname)
-        matver        = anyver.search(itname)
-        if not matsrc:
+        title     = item.title
+        itemname  = title.split('/')[-1]
+        matsrc_it = srcname_anyver.finditer(itemname)
+
+        if not matsrc_it:
             continue
-        itname, itext = path.splitext(itname)
-#        print(itext)
-        if itext == srcext:
-            ver = matver.group().rstrip('.')
-            break
+
+        for matsrc in matsrc_it:
+            matver = anyver.search(matsrc.group())
+            itemname, itemext = path.splitext(matsrc.group())
+
+            if itemext == srcext:
+                ver = matver.group().rstrip('.')
+                if not re.match(r'^[0-9]', ver):
+                    ver = ver[1:]
+                verfind = True
+                break
+
+        if verfind:
+            break;
 
     return (ver)
 
