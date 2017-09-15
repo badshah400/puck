@@ -22,6 +22,5 @@ science/muparser
 science/nlopt
 science/normaliz
 science/openblas
-science/python3-veusz
 server:messaging/telegram-desktop
 X11:terminals/guake
