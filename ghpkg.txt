@@ -8,7 +8,6 @@ multimedia:apps/amsynth
 multimedia:apps/lollypop
 multimedia:apps/lollypop-portal
 multimedia:apps/vocal
-network:pidgin/pidgin-embeddedvideo
 Publishing/texworks
 science/apfel
 science/arpack-ng
@@ -22,6 +21,5 @@ science/muparser
 science/nlopt
 science/normaliz
 science/openblas
-science/python3-veusz
 server:messaging/telegram-desktop
 X11:terminals/guake

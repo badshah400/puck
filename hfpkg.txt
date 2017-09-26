@@ -1,5 +1,5 @@
 Education/dvegas
-devel:languages:python3/python3-pyfeyn
+devel:languages:python/python-pyfeyn
 science/ThePEG
 science/YODA
 science/Rivet
