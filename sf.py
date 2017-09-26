@@ -59,10 +59,19 @@ def sfLastVer(sfprj, srcf, oldver):
     return (ver)
 
 if __name__ == '__main__':
-    sf_dlurl_re   = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
+    sf_dlurl_re1  = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
+    sf_dlurl_re2  = re.compile('^sf\.net$|^sourceforge\.net$')
     sf_prjurl_re1 = re.compile('sourceforge\.net/projects/?|sf\.net/projects/?')
     sf_prjurl_re2 = re.compile('\.sourceforge\.net/?|\.sf\.net/?')
-    f = PrjPkgList('sfpkg.txt')
+    
+    if len(sys.argv) == 1:
+        f = PrjPkgList('sfpkg.txt')
+    else:
+        pkgs = []
+        for a in sys.argv[1:]:
+            pkgs.append(a)
+        f = PrjPkgList.frominputlist(pkgs)
+
     for prj, pkg in f.List():
         stags     = SpecTags(prj, pkg)
         src_url   = stags.SourceUrl()
@@ -73,9 +82,14 @@ if __name__ == '__main__':
         sfprj     = ''
 
         # Figure out SF project name
-        if (sf_dlurl_re.match(src_parts[0])):
+        if (sf_dlurl_re1.match(src_parts[0])):
             # This works when the srcURL is of the form:
             # http://downloads.sourceforge.net/<sfprj>/<src_file>
+            sfprj = src_parts[1]
+
+        if (sf_dlurl_re2.match(src_parts[0])):
+            # This works when the srcURL is of the form:
+            # http://sourceforge.net/projects/mikmod/files/...
             sfprj = src_parts[1]
 
         elif (sf_prjurl_re1.search(stags.Url())):
