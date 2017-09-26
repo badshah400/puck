@@ -3,7 +3,6 @@ Education/artha
 Education/libmikmod
 Education/liborigin
 Education/maxima
-Education/open-axiom
 Education/rosegarden
 Education/stellarium
 Education/tuxpaint
