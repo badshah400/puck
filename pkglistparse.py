@@ -27,6 +27,24 @@ class PrjPkgList:
             # print(l)
             self.prjpkgs.append((l[0], l[1].rstrip('\n')))
 
+    @classmethod
+    def frominputlist(self, pkglist):
+        self.prjpkgs = []
+
+        for line in pkglist:
+        # IGNORE COMMENTED LINES
+            if line[0] == '#':
+                continue
+
+            # REPLACE SPACE BY '/' THEN SPLIT BY '/'
+            line = line.replace(' ', '/')
+            # print(line)
+            l = line.split('/')
+            if len(l) != 2:
+                continue
+            # print(l)
+            self.prjpkgs.append((l[0], l[1].rstrip('\n')))
+
     def List(self):
         return self.prjpkgs
 
