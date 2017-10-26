@@ -81,7 +81,6 @@ science/octave-forge-tisean
 science/octave-forge-tsa
 science/octave-forge-vrml
 science/openbabel
-science/PlotDigitizer
 science/plplot
 science/wcalc
 science/zhu3d
