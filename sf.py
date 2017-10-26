@@ -65,12 +65,12 @@ if __name__ == '__main__':
     sf_prjurl_re2 = re.compile('\.sourceforge\.net/?|\.sf\.net/?')
     
     if len(sys.argv) == 1:
-        f = PrjPkgList('sfpkg.txt')
+        f = PrjPkgList.fromfile('sfpkg.txt')
     else:
         pkgs = []
         for a in sys.argv[1:]:
             pkgs.append(a)
-        f = PrjPkgList.frominputlist(pkgs)
+        f = PrjPkgList(pkgs)
 
     for prj, pkg in f.List():
         stags     = SpecTags(prj, pkg)

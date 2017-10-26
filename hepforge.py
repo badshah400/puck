@@ -42,7 +42,7 @@ def hepVer(prj, pkgext=None):
 
 
 if __name__ == '__main__':
-    f = PrjPkgList('hfpkg.txt')
+    f = PrjPkgList.fromfile('hfpkg.txt')
 
     for prj, pkg in f.List():
         sp  = SpecTags(prj, pkg)

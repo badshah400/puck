@@ -46,7 +46,7 @@ def ghLastVer(ghuser, ghrepo):
         return(ver)
 
 if __name__ == '__main__':
-    f = PrjPkgList('ghpkg.txt')
+    f = PrjPkgList.fromfile('ghpkg.txt')
 
     for prj, pkg in f.List():
 
