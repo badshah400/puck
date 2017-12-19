@@ -1,3 +1,5 @@
+devel:languages:python/python-limnoria
+devel:languages:python/python-wptools
 devel:languages:python/torbrowser-launcher
 Education/wxMaxima
 graphics/libmypaint
@@ -20,6 +22,9 @@ science/form
 science/muparser
 science/nlopt
 science/normaliz
+science/o2scl
 science/openblas
+science/python-Mathics
+science/splinter
 server:messaging/telegram-desktop
 X11:terminals/guake
