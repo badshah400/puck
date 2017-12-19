@@ -6,6 +6,7 @@ graphics/libmypaint
 graphics/mypaint
 hardware/iio-sensor-proxy
 hardware/switcheroo-control
+M17N/ibus-typing-booster
 multimedia:apps/amsynth
 multimedia:apps/lollypop
 multimedia:apps/lollypop-portal
