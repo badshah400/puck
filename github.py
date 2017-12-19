@@ -51,13 +51,17 @@ if __name__ == '__main__':
     for prj, pkg in f.List():
 
         stags   = SpecTags(prj, pkg)
+        url     = stags.Url()
         src_url = stags.SourceUrl()
 #        print(srcURL)
         ghuser, ghrepo = src_url.split('/')[3:5]
         if not re.search(r'github\.com', src_url):
-            errs.Append(r'{:s}/{:s}: Source does not point to github URL'
-                         .format(prj,pkg))
-            continue
+            if not re.search(r'github\.com', url):
+                errs.Append(r'{:s}/{:s}: Source does not point to github URL'
+                           .format(prj,pkg))
+                continue
+            else:
+                ghuser, ghrepo = url.split('/')[3:5]
         
         specVer = stags.Version()
 #        print(specver)
