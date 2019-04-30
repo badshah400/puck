@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 import sys
@@ -68,8 +68,8 @@ if __name__ == '__main__':
         
         ghVer     = ghLastVer(ghuser, ghrepo)
 
-        newer = u'↑'.encode('utf-8') if NewUpstreamVer(ghVer, specVer) else ''
+        newer = u'↑'.encode('utf-8') if NewUpstreamVer(ghVer, specVer) else b''
         print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer, ghVer, newer))
+              .format(prj+'/'+pkg, specVer, ghVer, newer.decode('utf-8')))
 
 errs.Print()

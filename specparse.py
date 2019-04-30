@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80:
 
+import sys
 from os import path
 from subprocess import call, check_output, PIPE
 from tempfile import NamedTemporaryFile
@@ -26,9 +27,10 @@ class SpecTags:
 
         fi = osc.core.http_GET(u)
         try:
-            spec = ''.join(fi.readlines())
+            spec = b''.join(fi.readlines()).decode('utf-8')
         except:
             print("Error fetching spec file.")
+            sys.exit(-1)
 
         cachedir = path.join('.', '.osc')
         if not path.exists(cachedir):
@@ -40,10 +42,10 @@ class SpecTags:
 
 #            print(f.name)
             try:
-                spec_exp = check_output(['rpmspec', '-P', f.name], stderr=PIPE)
+                spec_exp = check_output(['rpmspec', '-P', f.name], stderr=PIPE).decode('utf-8')
                 self.Ver = self.re_ver.search(spec_exp).group().split(' ')[-1]
             except:
-                spec_exp = check_output(['rpmdev-spectool', '-S', f.name])
+                spec_exp = check_output(['rpmdev-spectool', '-S', f.name]).decode('utf-8')
                 self.Ver = self.re_ver.search(spec).group().split(' ')[-1]
 #            print(src0)
 
