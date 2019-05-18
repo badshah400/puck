@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 import sys
@@ -8,7 +8,6 @@ from string import Template
 import re
 import feedparser as fp
 from tempfile import NamedTemporaryFile
-import osc.conf
 from specparse import SpecTags
 from vercomp import NewUpstreamVer
 from pkglistparse import PrjPkgList
@@ -110,8 +109,8 @@ if __name__ == '__main__':
 
         sfVer = sfLastVer(sfprj, src_file, specVer)
 
-        newer = u'↑'.encode('utf-8') if NewUpstreamVer(sfVer, specVer) else ''
+        newer = u'↑'.encode('utf-8') if NewUpstreamVer(sfVer, specVer) else b''
         print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer, sfVer, newer))
+              .format(prj+'/'+pkg, specVer, sfVer, newer.decode('utf-8')))
 
 errs.Print()
