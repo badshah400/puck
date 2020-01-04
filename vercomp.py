@@ -2,9 +2,17 @@
 # vim: set ai et ts=4 sw=4 tw=80:
 
 def NewUpstreamVer(ver1, ver2):
-    arr1 = ver1.split('.')
+    arr1 = ver1.split('.') #if type(ver1) == "string" else [ver1]
     arr2 = ver2.split('.')
     res  = False
+
+    nums = len(arr1) - len(arr2)
+    if nums > 0:
+        for i in range(nums):
+            arr2.append('0')
+    else:
+        for i in range(-nums):
+            arr1.append('0')
 
     for i in range(min(len(arr1), len(arr2))):
         # PAD WITH HIGHEST ASCII CHARACTER IF SUBSTR LENGTH ARE NOT IDENTICAL
@@ -15,8 +23,7 @@ def NewUpstreamVer(ver1, ver2):
             arr2[i] += ('~' * abs(lendiff))
         elif lendiff < 0:
             arr1[i] += ('~' * abs(lendiff))
-    try:
-        return True if arr1 > arr2 else False
-    except:
-        raise
+
+        res = True if arr1[i] > arr2[i] else False
+
     return(res)
