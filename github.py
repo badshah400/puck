@@ -31,19 +31,12 @@ def ghLastVer(ghuser, ghrepo):
 
     alphastr = re.compile('alpha', re.I)
     betastr  = re.compile('beta', re.I)
-    for item in d.entries:
-        id    = item.id
-        title = item.title
-        ver = id.split('/')[-1]
-        # Strip any leading name tags, etc. we just want the version
-        nametag = re.compile('^[a-zA-Z_.-]+')
-        if re.match(nametag, ver):
-            ver = nametag.sub('', ver)
-        if re.search(alphastr, ver) or re.search(betastr, ver):
-            continue
-        if re.search(alphastr, title) or re.search(betastr, title):
-            continue
-        return(ver)
+
+    last_tag = d.entries[0]
+    ver      = last_tag.id.split('/')[-1]
+    nametag = re.compile('^[a-zA-Z_.-]+')
+    ver = nametag.sub('', ver)
+    return ver
 
 if __name__ == '__main__':
     f = PrjPkgList.fromfile('ghpkg.txt')
