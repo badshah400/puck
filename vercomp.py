@@ -2,6 +2,8 @@
 # vim: set ai et ts=4 sw=4 tw=80:
 
 def NewUpstreamVer(ver1, ver2):
+    ver1 = ver1.replace('-', '.')
+    ver2 = ver2.replace('-', '.')
     arr1 = ver1.split('.') #if type(ver1) == "string" else [ver1]
     arr2 = ver2.split('.')
     res  = False
@@ -14,7 +16,7 @@ def NewUpstreamVer(ver1, ver2):
         for i in range(-nums):
             arr1.append('0')
 
-    for i in range(min(len(arr1), len(arr2))):
+    for i in range(len(arr1)):
         # PAD WITH HIGHEST ASCII CHARACTER IF SUBSTR LENGTH ARE NOT IDENTICAL
         # E.G. 2.0.1beta1 > 2.0.1 but 2.0.1beta1 < 2.0.1~~~~~
         # FIXME: DO WE WANT TO HANDLE CORNER CASES LIKE 2.1 > 2.1.BETA1?
@@ -25,5 +27,6 @@ def NewUpstreamVer(ver1, ver2):
             arr1[i] += ('~' * abs(lendiff))
 
         res = True if arr1[i] > arr2[i] else False
+        if res == True: break
 
     return(res)
