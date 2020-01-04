@@ -2,7 +2,7 @@
 # vim: set ai et ts=4 sw=4 tw=80:
 
 import sys
-from os import path
+from os import path, mkdir
 from subprocess import call, check_output, PIPE
 from tempfile import NamedTemporaryFile
 import re
@@ -34,7 +34,7 @@ class SpecTags:
 
         cachedir = path.join('.', '.osc')
         if not path.exists(cachedir):
-            os.mkdir(cachedir)
+            mkdir(cachedir)
 
         with NamedTemporaryFile(mode='w', suffix='.spec', dir=cachedir) as f:
             f.write(spec)
