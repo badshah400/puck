@@ -26,7 +26,9 @@ def NewUpstreamVer(ver1, ver2):
         elif lendiff < 0:
             arr1[i] += ('~' * abs(lendiff))
 
-        res = True if arr1[i] > arr2[i] else False
-        if res == True: break
+        if arr1[i] > arr2[i]:
+            return True
+        elif arr1[i] < arr2[i]:
+            return False
 
     return(res)
