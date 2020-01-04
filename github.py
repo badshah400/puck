@@ -21,7 +21,7 @@ apiurl = osc.conf.config['apiurl']
 errs = Errors()
 
 def ghLastVer(ghuser, ghrepo):
-    urlTemp = Template('https://github.com/${user}/${repo}/releases.atom')
+    urlTemp = Template('https://github.com/${user}/${repo}/tags.atom')
     url     = urlTemp.substitute(user=ghuser, repo=ghrepo)
     d       = fp.parse(url)
     if not len(d.entries):
