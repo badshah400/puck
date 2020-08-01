@@ -1,10 +1,8 @@
 devel:libraries:c_c++/armadillo
-Education/artha
 Education/libmikmod
 Education/liborigin
 Education/maxima
 Education/rosegarden
-Education/stellarium
 Education/tuxpaint
 Education/xaos
 Education/xplanet
