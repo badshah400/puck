@@ -1,15 +1,10 @@
 devel:languages:python/python-limnoria
 devel:languages:python/python-wptools
 devel:languages:python/torbrowser-launcher
-devel:languages:python:numeric/python-kwant
-devel:languages:python:numeric/python-qsymm
-devel:languages:python:numeric/python-tinyarray
 Education/wxMaxima
 Education/stellarium
 graphics/libmypaint
 #graphics/mypaint
-hardware/iio-sensor-proxy
-hardware/switcheroo-control
 M17N/ibus-typing-booster
 multimedia:apps/amsynth
 multimedia:apps/vocal

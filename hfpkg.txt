@@ -1,9 +1,9 @@
 Education/dvegas
-devel:languages:python/python-pyfeyn
+devel:languages:python:numeric/python-pyfeyn
 science/ThePEG
 science/YODA
 science/Rivet
-science/ColorFull
+#science/ColorFull
 science/Herwig
 science/HepMC
 science/LHAPDF
