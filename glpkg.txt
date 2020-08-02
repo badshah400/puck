@@ -1,0 +1,5 @@
+GNOME:Next/mutter               https://gitlab.gnome.org/GNOME/mutter
+hardware/iio-sensor-proxy	-
+hardware/switcheroo-control	-
+science/paraview                https://gitlab.kitware.com/paraview/paraview
+science/vtk                     https://gitlab.kitware.com/vtk/vtk
