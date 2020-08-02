@@ -7,7 +7,7 @@ from string import Template
 import re
 from os import path
 import feedparser as fp
-from packaging.version import Version, parse
+from packaging.version import Version, parse, LegacyVersion
 import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
@@ -65,7 +65,7 @@ if __name__ == '__main__':
             errs.Append('{:s}: Invalid Gitlab URL'.format(specgl))
             continue
 
-        specVer = Version(stags.Version())
+        specVer = LegacyVersion(stags.Version())
         pVer    = Version(glLastVer(specgl))
 
         newer = u'↑'.encode('utf-8') if (pVer > specVer) else b''
