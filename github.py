@@ -7,10 +7,9 @@ from string import Template
 import re
 from os import path
 import feedparser as fp
-
+from packaging.version import Version, parse
 import osc.conf
 from specparse import SpecTags
-from vercomp import NewUpstreamVer
 from pkglistparse import PrjPkgList
 from errors import Errors
 
@@ -27,15 +26,12 @@ def ghLastVer(ghuser, ghrepo):
     if not len(d.entries):
         global errs
         errs.Append('{:s}/{:s}: Invalid github project'.format(ghuser, ghrepo))
-        return ('0.0.0')
-
-    alphastr = re.compile('alpha', re.I)
-    betastr  = re.compile('beta', re.I)
+        return Version('0.0.0')
 
     last_tag = d.entries[0]
     ver      = last_tag.id.split('/')[-1]
-    nametag = re.compile('^[a-zA-Z_.-]+')
-    ver = nametag.sub('', ver)
+    nametag  = re.compile('^[a-zA-Z_.-]+')
+    ver      = parse(nametag.sub('', ver))
     return ver
 
 if __name__ == '__main__':
@@ -48,11 +44,10 @@ if __name__ == '__main__':
         f = PrjPkgList(pkgs)
 
     for prj, pkg in f.List():
-
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
-#        print(srcURL)
+
         ghuser, ghrepo = src_url.split('/')[3:5]
         if not re.search(r'github\.com', src_url):
             if not re.search(r'github\.com', url):
@@ -62,13 +57,11 @@ if __name__ == '__main__':
             else:
                 ghuser, ghrepo = url.split('/')[3:5]
         
-        specVer = stags.Version()
-#        print(specver)
-        
-        ghVer     = ghLastVer(ghuser, ghrepo)
+        specVer = parse(stags.Version())
+        ghVer   = ghLastVer(ghuser, ghrepo)
 
-        newer = u'↑'.encode('utf-8') if NewUpstreamVer(ghVer, specVer) else b''
+        newer = u'↑'.encode('utf-8') if (ghVer > specVer) else b''
         print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer, ghVer, newer.decode('utf-8')))
+              .format(prj+'/'+pkg, specVer.public, ghVer.public, newer.decode('utf-8')))
 
 errs.Print()

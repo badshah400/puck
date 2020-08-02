@@ -1,15 +1,15 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 import sys
 import os
-from os import path
-import urllib2
+from pathlib import Path
+import urllib.request
 import re
 from lxml import etree #import ElementTree as ET
 import osc.conf
 from specparse import SpecTags
-from vercomp import NewUpstreamVer
+from packaging.version import Version, parse, InvalidVersion
 from errors import Errors
 from pkglistparse import PrjPkgList
 
@@ -21,28 +21,34 @@ errs = Errors()
 
 def hepVer(prj, pkgext=None):
     exts = ['.bz2', '.gz', '.tar', '.tgz', '.xz', '.7z', '.zip', '.rar']
-    response = urllib2.urlopen('https://www.hepforge.org/downloads/' + prj)
-    html = response.read()
-    strongs = etree.HTML(html).findall('.//strong')
+    response = urllib.request.urlopen('https://www.hepforge.org/downloads/'
+                                      + prj).read()
+    html = response.decode('utf-8')
+    strongs = etree.HTML(html).findall('.//*[@class="name"]/a')[0].text
+    # print(strongs)
     try:
         if not strongs:
             raise Exception("Not listed on hepforge downloads page")
-        for i in range(1,len(strongs)-1,3):
-            strongver = strongs[i]
-            strext    = '.' + strongs[i+1][0].get('href').split('.')[-1]
-            if not pkgext:
-                if strext in exts:
-                    break
-            else:
-                if strext == pkgext:
-                    break
     except:
         return('-')
-    return(strongver.text.strip())
+
+    nametag = re.compile('^[a-zA-Z_.-]+')
+    ver = nametag.sub('', strongs)
+    while (Path(ver).suffix in exts):
+        ver = ver.rsplit('.', 1)[0]
+        # print(ver)
+    
+    return Version(ver.strip())
 
 
 if __name__ == '__main__':
-    f = PrjPkgList.fromfile('hfpkg.txt')
+    if len(sys.argv) == 1:
+        f = PrjPkgList.fromfile('hfpkg.txt')
+    else:
+        pkgs = []
+        for a in sys.argv[1:]:
+            pkgs.append(a)
+        f = PrjPkgList(pkgs)
 
     for prj, pkg in f.List():
         sp  = SpecTags(prj, pkg)
@@ -65,26 +71,30 @@ if __name__ == '__main__':
                          .format(prj,pkg))
             continue
         
-        specVer = sp.Version()
+        specVer = Version(sp.Version())
 #        print(specver)
         
-        hepver     = hepVer(hepprj)
+        try:
+            hepver  = hepVer(hepprj)
+        except InvalidVersion:
+            errs.Append('Could not parse version for {:s}/{:s}'.format(prj,pkg))
+            continue
 #        print(hepver)
 
         try:
-            newer = u'↑'.encode('utf-8') if NewUpstreamVer(hepver, specVer) else ''
+            newer = u'↑'.encode('utf-8') if (hepver > specVer) else b''
         except:
-            newer = ''
+            newer = b''
             errs.Append(r'{:s}/{:s}: Invalid version from hepforge'
                          .format(prj,pkg))
         print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer, hepver.encode('utf-8'), newer))
+              .format(prj+'/'+pkg, specVer.public, hepver.public, newer.decode('utf-8')))
 
 ### PYTHIA CHECK ###
-pythia_url = 'http://home.thep.lu.se/~torbjorn/pythia82html/UpdateHistory.html'
-response   = urllib2.urlopen(pythia_url)
-html       = response.read()
-li_all     = etree.HTML(html).findall('.//li')
+pythia_url = 'http://home.thep.lu.se/~torbjorn/pythia83html/UpdateHistory.html'
+response   = urllib.request.urlopen(pythia_url)
+html       = response.read().decode('utf-8')
+li_all     = etree.HTML(html).findall('.//ol/li/a')
 li0_text   = li_all[0].text
 
 pythia_ver, rel_date = li0_text.split(':')
@@ -93,16 +103,16 @@ rel_date   = rel_date.strip()
 prj = 'science'
 pkg = 'pythia'
 sp  = SpecTags(prj, pkg)
-specVer = sp.Version()
+specVer = Version(sp.Version())
 try:
-    newer = (u'↑'.encode('utf-8') if NewUpstreamVer(pythia_ver, specVer)
-             else '')
+    newer = (u'↑'.encode('utf-8') if (parse(pythia_ver) > specVer)
+             else b'')
 except:
-    newer = ''
+    newer = b''
     errs.Append(r'{:s}/{:s}: Invalid version from Pythia webpage'
                  .format(prj,pkg))
 
 print('{:45s} {:15s} {:15s} {:15s}'
-      .format(prj+'/'+pkg, specVer, pythia_ver.encode('utf-8'), newer))
+      .format(prj+'/'+pkg, specVer.public, pythia_ver, newer.decode('utf-8')))
 
 errs.Print()

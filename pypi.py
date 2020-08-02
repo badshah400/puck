@@ -7,10 +7,9 @@ from string import Template
 import re
 from os import path
 import feedparser as fp
-
+from packaging.version import Version, parse
 import osc.conf
 from specparse import SpecTags
-from vercomp import NewUpstreamVer
 from pkglistparse import PrjPkgList
 from errors import Errors
 
@@ -31,15 +30,10 @@ def pypiLastVer(prj):
         if not len(d.entries):
             global errs
             errs.Append('{:s}: Invalid pypi project'.format(prj))
-            return ('0.0.0')
-
-    alphastr = re.compile('alpha', re.I)
-    betastr  = re.compile('beta', re.I)
+            return Version('0.0.0')
 
     last_tag = d.entries[0]
-    ver      = last_tag.title
-    nametag  = re.compile('^[a-zA-Z_.-]+')
-    ver      = nametag.sub('', ver)
+    ver      = parse(last_tag.title)
     return ver
 
 if __name__ == '__main__':
@@ -65,12 +59,11 @@ if __name__ == '__main__':
         #                    .format(prj,pkg))
         #         continue
         
-        specVer = stags.Version()
-        
-        pVer     = pypiLastVer(pypiprj)
+        specVer = parse(stags.Version())
+        pVer    = pypiLastVer(pypiprj)
 
-        newer = u'↑'.encode('utf-8') if NewUpstreamVer(pVer, specVer) else b''
+        newer = u'↑'.encode('utf-8') if (pVer > specVer) else b''
         print('{:55s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer, pVer, newer.decode('utf-8')))
+              .format(prj+'/'+pkg, specVer.public, pVer.public, newer.decode('utf-8')))
 
 errs.Print()

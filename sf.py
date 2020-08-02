@@ -9,7 +9,7 @@ import re
 import feedparser as fp
 from tempfile import NamedTemporaryFile
 from specparse import SpecTags
-from vercomp import NewUpstreamVer
+from packaging.version import Version, parse
 from pkglistparse import PrjPkgList
 from errors import Errors
 import osc.conf
@@ -55,7 +55,7 @@ def sfLastVer(sfprj, srcf, oldver):
         if verfind:
             break;
 
-    return (ver)
+    return Version(ver)
 
 if __name__ == '__main__':
     sf_dlurl_re1  = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         src_url   = stags.SourceUrl()
         src_parts = src_url.split('/')[2:] # Drop the leading 'http://'
         src_file  = src_parts[-1]
-        specVer   = stags.Version()
+        specVer   = parse(stags.Version())
 
         sfprj     = ''
 
@@ -107,10 +107,10 @@ if __name__ == '__main__':
                          .format(prj,pkg))
             continue
 
-        sfVer = sfLastVer(sfprj, src_file, specVer)
+        sfVer = sfLastVer(sfprj, src_file, specVer.public)
 
-        newer = u'↑'.encode('utf-8') if NewUpstreamVer(sfVer, specVer) else b''
+        newer = u'↑'.encode('utf-8') if (sfVer > specVer) else b''
         print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer, sfVer, newer.decode('utf-8')))
+              .format(prj+'/'+pkg, specVer.public, sfVer.public, newer.decode('utf-8')))
 
 errs.Print()

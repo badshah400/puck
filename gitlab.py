@@ -10,7 +10,6 @@ import feedparser as fp
 from packaging.version import Version, parse
 import osc.conf
 from specparse import SpecTags
-from vercomp import NewUpstreamVer
 from pkglistparse import PrjPkgList
 from errors import Errors
 
@@ -29,7 +28,7 @@ def glLastVer(gurl):
         if not len(d.entries):
             global errs
             errs.Append('{:s}: Invalid Gitlab URL'.format(gurl))
-            return ('0.0.0')
+            return '0.0.0'
 
     alphastr = re.compile('alpha', re.I)
     betastr  = re.compile('beta', re.I)
@@ -67,8 +66,7 @@ if __name__ == '__main__':
             continue
 
         specVer = Version(stags.Version())
-        
-        pVer     = Version(glLastVer(specgl))
+        pVer    = Version(glLastVer(specgl))
 
         newer = u'↑'.encode('utf-8') if (pVer > specVer) else b''
         print('{:55s} {:15s} {:15s} {:15s}'
