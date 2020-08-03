@@ -66,7 +66,7 @@ if __name__ == '__main__':
             continue
 
         specVer = LegacyVersion(stags.Version())
-        pVer    = Version(glLastVer(specgl))
+        pVer    = LegacyVersion(glLastVer(specgl))
 
         newer = u'↑'.encode('utf-8') if (pVer > specVer) else b''
         print('{:55s} {:15s} {:15s} {:15s}'
