@@ -49,10 +49,10 @@ if __name__ == '__main__':
             prj, pkg      = prjpkg.split('/')
             f.append([prj, pkg, glurl])
     else:
-        pkgs = []
-        for a in sys.argv[1:]:
-            pkgs.append(a)
-        f = PrjPkgList(pkgs)
+        prjpkg   = sys.argv[1]
+        prj, pkg = prjpkg.split('/')
+        glurl    = '-' 
+        f.append([prj, pkg, glurl])
 
     for prj, pkg, gl in f:
         stags   = SpecTags(prj, pkg)
