@@ -21,7 +21,7 @@ apiurl = osc.conf.config['apiurl']
 errs = Errors()
 
 def sfLastVer(sfprj, srcf, oldver):
-    urlTemp = Template('https://sourceforge.net/projects/${prj}/rss')
+    urlTemp = Template('https://sourceforge.net/projects/${prj}/rss?path=/')
     url     = urlTemp.substitute(prj=sfprj)
     d       = fp.parse(url)
     ver     = oldver
@@ -49,6 +49,9 @@ def sfLastVer(sfprj, srcf, oldver):
                 ver = matver.group().rstrip('.')
                 if not re.match(r'^[0-9]', ver):
                     ver = ver[1:]
+                # HACK: Drop 7z extension manually
+                if itemext == '.7z':
+                    ver = ver.rsplit('.', 1)[0]
                 verfind = True
                 break
 
