@@ -12,6 +12,7 @@ import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
+from stdver import stdver
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -33,7 +34,7 @@ def pypiLastVer(prj):
             return Version('0.0.0')
 
     last_tag = d.entries[0]
-    ver      = parse(last_tag.title)
+    ver      = stdver(last_tag.title)
     return ver
 
 if __name__ == '__main__':
@@ -60,7 +61,7 @@ if __name__ == '__main__':
         #         continue
         
         specVer = parse(stags.Version())
-        pVer    = pypiLastVer(pypiprj)
+        pVer    = parse(pypiLastVer(pypiprj))
 
         newer = u'↑'.encode('utf-8') if (pVer > specVer) else b''
         print('{:55s} {:15s} {:15s} {:15s}'

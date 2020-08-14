@@ -12,6 +12,7 @@ import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
+from stdver import stdver
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -30,9 +31,7 @@ def ghLastVer(ghuser, ghrepo):
 
     last_tag = d.entries[0]
     ver      = last_tag.id.split('/')[-1]
-    nametag  = re.compile('^[a-zA-Z_.-]+')
-    ver      = parse(nametag.sub('', ver))
-    return ver
+    return stdver(ver)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
@@ -58,7 +57,7 @@ if __name__ == '__main__':
                 ghuser, ghrepo = url.split('/')[3:5]
         
         specVer = parse(stags.Version())
-        ghVer   = ghLastVer(ghuser, ghrepo)
+        ghVer   = parse(ghLastVer(ghuser, ghrepo))
 
         newer = u'↑'.encode('utf-8') if (ghVer > specVer) else b''
         print('{:45s} {:15s} {:15s} {:15s}'

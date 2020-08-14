@@ -12,6 +12,7 @@ import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
+from stdver import stdver
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -30,14 +31,9 @@ def glLastVer(gurl):
             errs.Append('{:s}: Invalid Gitlab URL'.format(gurl))
             return '0.0.0'
 
-    alphastr = re.compile('alpha', re.I)
-    betastr  = re.compile('beta', re.I)
-
     last_tag = d.entries[0]
     ver      = last_tag.title
-    nametag  = re.compile('^[a-zA-Z_.-]+')
-    ver      = nametag.sub('', ver)
-    return ver
+    return stdver(ver)
 
 if __name__ == '__main__':
     f = []
@@ -59,7 +55,7 @@ if __name__ == '__main__':
         url     = stags.Url()
         src_url = stags.SourceUrl()
         specgl  = gl if gl != '-' else '/'.join(src_url.split('/')[0:5])
-        
+
         rehttps = re.compile('^https?://')
         if not rehttps.match(specgl):
             errs.Append('{:s}: Invalid Gitlab URL'.format(specgl))

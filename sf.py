@@ -12,6 +12,7 @@ from specparse import SpecTags
 from packaging.version import Version, parse
 from pkglistparse import PrjPkgList
 from errors import Errors
+from stdver import stdver
 import osc.conf
 
 # initialize osc configuration
@@ -58,7 +59,7 @@ def sfLastVer(sfprj, srcf, oldver):
         if verfind:
             break;
 
-    return Version(ver)
+    return stdver(ver)
 
 if __name__ == '__main__':
     sf_dlurl_re1  = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
@@ -110,7 +111,7 @@ if __name__ == '__main__':
                          .format(prj,pkg))
             continue
 
-        sfVer = sfLastVer(sfprj, src_file, specVer.public)
+        sfVer = parse(sfLastVer(sfprj, src_file, specVer.public))
 
         newer = u'↑'.encode('utf-8') if (sfVer > specVer) else b''
         print('{:45s} {:15s} {:15s} {:15s}'
