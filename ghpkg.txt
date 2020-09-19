@@ -1,12 +1,18 @@
+Application:Geo/insighttoolkit
 devel:languages:python/python-limnoria
 devel:languages:python/python-wptools
 devel:languages:python/torbrowser-launcher
+devel:libraries:c_c++/CastXML
+devel:libraries:c_c++/blitz
+Documentation/cppreference-doc
+Documentation/stdman
 Education/wxMaxima
 Education/stellarium
 graphics/libmypaint
 #graphics/mypaint
 M17N/ibus-typing-booster
 multimedia:apps/amsynth
+multimedia:apps/fmit
 multimedia:apps/vocal
 Publishing/texworks
 Publishing/gummi
@@ -15,6 +21,8 @@ science/apfel
 science/arpack-ng
 science/bowtie2
 science/cadabra2
+science/casacore
+#science/casarest
 science/clinfo
 science/dealii
 science/engauge-digitizer
