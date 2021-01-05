@@ -22,6 +22,7 @@ apiurl = osc.conf.config['apiurl']
 errs = Errors()
 
 def sfLastVer(sfprj, srcf, oldver):
+    srcf = srcf.replace('+', r'\+')
     urlTemp = Template('https://sourceforge.net/projects/${prj}/rss?path=/')
     url     = urlTemp.substitute(prj=sfprj)
     d       = fp.parse(url)
