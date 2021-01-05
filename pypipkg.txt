@@ -1,14 +1,17 @@
 devel:languages:python/python-hankel
 devel:languages:python/python-hawkauthlib
 devel:languages:python/python-limnoria
+devel:languages:python/python-param
 devel:languages:python/python-pyRXP
 devel:languages:python/python-wptools
 devel:languages:python/python-wikipedia
 devel:languages:python:misc/python-emcee
 devel:languages:python:numeric/python-bokeh
 devel:languages:python:numeric/python-folium
+devel:languages:python:numeric/python-iminuit
 devel:languages:python:numeric/python-kwant
 devel:languages:python:numeric/python-panel
+devel:languages:python:numeric/python-particle
 devel:languages:python:numeric/python-qsymm
 devel:languages:python:numeric/python-tinyarray
 devel:languages:python:numeric/python-veusz

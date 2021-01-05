@@ -6,6 +6,7 @@ Education/rosegarden
 Education/tuxpaint
 Education/xaos
 Education/xplanet
+GNOME:Apps/c++-gtk-utils
 graphics/djvulibre
 graphics/djvulibre-djview4
 graphics/hugin

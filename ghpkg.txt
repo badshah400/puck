@@ -4,6 +4,8 @@ devel:languages:python/python-wptools
 devel:languages:python/torbrowser-launcher
 devel:libraries:c_c++/CastXML
 devel:libraries:c_c++/blitz
+devel:libraries:c_c++/trng
+devel:tools/grpc
 Documentation/cppreference-doc
 Documentation/stdman
 Education/wxMaxima
