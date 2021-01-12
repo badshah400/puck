@@ -13,6 +13,7 @@ from packaging.version import Version, parse
 from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
+from chkrq import chkrq
 import osc.conf
 
 # initialize osc configuration
@@ -114,7 +115,12 @@ if __name__ == '__main__':
 
         sfVer = parse(sfLastVer(sfprj, src_file, specVer.public))
 
-        newer = u'↑'.encode('utf-8') if (sfVer > specVer) else b''
+        newer = b''
+        if sfVer > specVer:
+            rq    = chkrq(prj, pkg)
+            rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
+            newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
+
         print('{:45s} {:15s} {:15s} {:15s}'
               .format(prj+'/'+pkg, specVer.public, sfVer.public, newer.decode('utf-8')))
 

@@ -13,6 +13,7 @@ from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
+from chkrq import chkrq
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -64,7 +65,12 @@ if __name__ == '__main__':
         specVer = LegacyVersion(stags.Version())
         pVer    = LegacyVersion(glLastVer(specgl))
 
-        newer = u'↑'.encode('utf-8') if (pVer > specVer) else b''
+        newer = b''
+        if pVer > specVer:
+            rq    = chkrq(prj, pkg)
+            rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
+            newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
+
         print('{:55s} {:15s} {:15s} {:15s}'
               .format(prj+'/'+pkg, specVer.public, pVer.public, newer.decode('utf-8')))
 
