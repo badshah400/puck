@@ -15,16 +15,21 @@ def chkrq(prj,pkg):
                                      'limit'   : 1,
                                      'states'  : 'new,review' })
     fi = osc.core.http_GET(u)
-    numcollect = etree.fromstring(b''.join(fi.readlines()).decode('utf-8'))
-    nreq = int(numcollect.get('matches'))
-    if not nreq:
+
+    # Join all lines and read them into an etree object
+    collxml = etree.fromstring(b''.join(fi.readlines()))
+
+    nreq = int(collxml.get('matches'))                # Get no. of new/review requests
+
+    if not nreq:                                      # nreq = 0 => no requests
         return (u'', None)
     else:
-        descr  = numcollect[0].find('description').text
-        eolidx = descr.find('\n')
-        return (u'r', descr[:eolidx])
+        descr = collxml[0].find('description').text   # Get text in <description> node...
+        descr = descr.splitlines()[0]                 # ... keeping only first line
+
+        return (u'r', descr)
 
 if __name__ == '__main__':
     osc.conf.get_config()
     u, msg = chkrq('science', 'plplot')
-    print('{:s} [{:s}]'.format(u, msg))
+    print('{:s} [{:s}]'.format(u, msg) if msg else 'None')
