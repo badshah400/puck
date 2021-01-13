@@ -17,13 +17,12 @@ def chkrq(prj,pkg):
                                          'states'  : 'new,review' })
     fi      = osc.core.http_GET(u)
 
-    # Join all lines and read them into an etree object
     collxml = etree.fromstring(b''.join(fi.readlines()))
+                                                      # Join all lines into a byte-string
+                                                      # and read into etree object
     nreq    = int(collxml.get('matches'))             # Get no. of new/review requests
 
-    if not nreq:                                      # nreq = 0 => no requests
-        return (u'', None)
-    else:
+    if nreq:                                          # nreq = 0 => no requests
         target = collxml[0].find('.//target')         # To check if target matches
         tgtprj = target.get('project')
         tgtpkg = target.get('package')
@@ -35,6 +34,8 @@ def chkrq(prj,pkg):
             return (u'sr#{:s}'.format(rqid), descr)
         else:
             return (u'', None)
+    else:
+        return (u'', None)
 
 if __name__ == '__main__':
     osc.conf.get_config()
