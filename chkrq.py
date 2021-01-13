@@ -31,7 +31,8 @@ def chkrq(prj,pkg):
             descr = collxml[0].find('description').text
                                                       # Get text in <description> node...
             descr = descr.splitlines()[0]             # ... keeping only first line
-            return (u'r', descr)
+            rqid  = collxml[0].get('id')              # Get the request id
+            return (u'sr#{:s}'.format(rqid), descr)
         else:
             return (u'', None)
 
