@@ -34,7 +34,6 @@ science/muparser
 science/nlopt
 science/normaliz
 science/o2scl
-science/openblas
 science/python-Mathics
 science/splinter
 server:messaging/telegram-desktop
