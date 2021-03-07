@@ -14,9 +14,7 @@ from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
-import colorama as col
-
-col.init(autoreset=True)
+from output import FormOut
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -38,6 +36,7 @@ def ghLastVer(ghuser, ghrepo):
     return stdver(ver)
 
 if __name__ == '__main__':
+    out = FormOut()
     if len(sys.argv) == 1:
         f = PrjPkgList.fromfile('ghpkg.txt')
     else:
@@ -46,7 +45,9 @@ if __name__ == '__main__':
             pkgs.append(a)
         f = PrjPkgList(pkgs)
 
+    statusmap = {}
     for prj, pkg in f.List():
+        idstr   = prj + '/' + pkg
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
@@ -60,18 +61,17 @@ if __name__ == '__main__':
             else:
                 ghuser, ghrepo = url.split('/')[3:5]
         
-        specVer = parse(stags.Version())
-        ghVer   = parse(ghLastVer(ghuser, ghrepo))
+        statusmap[idstr] = {'specVer' : parse(stags.Version()),
+                             'upsVer' : parse(ghLastVer(ghuser, ghrepo)),
+                             'reqs'   : None,
+                             'update' : False
+                           }
 
-        newer = b''
-        colour = ''
-        if ghVer > specVer:
-            rq    = chkrq(prj, pkg)
-            rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
-            newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
-            colour = col.Fore.GREEN if len(rqmsg) else col.Fore.RED + col.Style.BRIGHT
+        if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
+            rq                         = chkrq(prj, pkg)
+            statusmap[idstr]['reqs']   = rq
+            statusmap[idstr]['update'] = True
 
-        print(colour + '{:55s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer.public, ghVer.public, newer.decode('utf-8')))
+        out.print(idstr, statusmap[idstr])
 
 errs.Print()

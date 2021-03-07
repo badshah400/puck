@@ -15,9 +15,7 @@ from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
 import osc.conf
-import colorama as col
-
-col.init(autoreset=True)
+from output import FormOut
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -80,7 +78,10 @@ if __name__ == '__main__':
             pkgs.append(a)
         f = PrjPkgList(pkgs)
 
+    out = FormOut()
+    statusmap = {}
     for prj, pkg in f.List():
+        idstr   = prj + '/' + pkg
         stags     = SpecTags(prj, pkg)
         src_url   = stags.SourceUrl()
         src_parts = src_url.split('/')[2:] # Drop the leading 'http://'
@@ -116,17 +117,19 @@ if __name__ == '__main__':
                          .format(prj,pkg))
             continue
 
-        sfVer = parse(sfLastVer(sfprj, src_file, specVer.public))
+        specVer          = parse(stags.Version())
+        statusmap[idstr] = { 'specVer' : specVer,
+                             'upsVer' : parse(sfLastVer(sfprj, src_file,
+                                                        specVer.public)),
+                             'reqs'   : None,
+                             'update' : False
+                           }
 
-        newer = b''
-        colour = ''
-        if sfVer > specVer:
-            rq    = chkrq(prj, pkg)
-            rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
-            newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
-            colour = col.Fore.GREEN if len(rqmsg) else col.Fore.RED + col.Style.BRIGHT
+        if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
+            rq                         = chkrq(prj, pkg)
+            statusmap[idstr]['reqs']   = rq
+            statusmap[idstr]['update'] = True
 
-        print(colour + '{:55s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer.public, sfVer.public, newer.decode('utf-8')))
+        out.print(idstr, statusmap[idstr])
 
 errs.Print()

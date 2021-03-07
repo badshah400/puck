@@ -14,9 +14,7 @@ from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
-import colorama as col
-
-col.init(autoreset=True)
+from output import FormOut
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -42,6 +40,7 @@ def pypiLastVer(prj):
     return ver
 
 if __name__ == '__main__':
+    out = FormOut()
     pypre   = re.compile('^python[2-3]?\-')
     if len(sys.argv) == 1:
         f = PrjPkgList.fromfile('pypipkg.txt')
@@ -51,7 +50,9 @@ if __name__ == '__main__':
             pkgs.append(a)
         f = PrjPkgList(pkgs)
 
+    statusmap = {}
     for prj, pkg in f.List():
+        idstr   = prj + '/' + pkg
         pypiprj  = pypre.sub('', pkg)
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
@@ -63,19 +64,18 @@ if __name__ == '__main__':
         #         errs.Append(r'{:s}/{:s}: Source does not point to PyPI URL'
         #                    .format(prj,pkg))
         #         continue
+
+        statusmap[idstr] = {'specVer' : parse(stags.Version()),
+                             'upsVer' : parse(pypiLastVer(pypiprj)),
+                             'reqs'   : None,
+                             'update' : False
+                           }
+
+        if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
+            rq                         = chkrq(prj, pkg)
+            statusmap[idstr]['reqs']   = rq
+            statusmap[idstr]['update'] = True
         
-        specVer = parse(stags.Version())
-        pVer    = parse(pypiLastVer(pypiprj))
-
-        newer = b''
-        colour = ''
-        if pVer > specVer:
-            rq    = chkrq(prj, pkg)
-            rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
-            newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
-            colour = col.Fore.GREEN if len(rqmsg) else col.Fore.RED + col.Style.BRIGHT
-
-        print(colour + '{:55s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer.public, pVer.public, newer.decode('utf-8')))
+        out.print(idstr, statusmap[idstr])
 
 errs.Print()

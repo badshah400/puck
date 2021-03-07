@@ -7,16 +7,14 @@ from string import Template
 import re
 from os import path
 import feedparser as fp
-from packaging.version import Version, parse, LegacyVersion
+from packaging.version import Version, parse
 import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
-import colorama as col
-
-col.init(autoreset=True)
+from output import FormOut
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -41,6 +39,7 @@ def glLastVer(gurl):
 
 if __name__ == '__main__':
     f = []
+    out = FormOut()
     if len(sys.argv) == 1:
         with open('glpkg.txt') as F:
             lines = F.readlines()
@@ -54,7 +53,9 @@ if __name__ == '__main__':
         glurl    = '-' 
         f.append([prj, pkg, glurl])
 
+    statusmap = {}
     for prj, pkg, gl in f:
+        idstr   = prj + '/' + pkg
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
@@ -65,18 +66,19 @@ if __name__ == '__main__':
             errs.Append('{:s}: Invalid Gitlab URL'.format(specgl))
             continue
 
-        specVer = LegacyVersion(stags.Version())
-        pVer    = LegacyVersion(glLastVer(specgl))
+        statusmap[idstr] = {'specVer' : parse(stags.Version()),
+                             'upsVer' : parse(glLastVer(specgl)),
+                             'reqs'   : None,
+                             'update' : False
+                           }
 
-        newer = b''
-        colour = ''
-        if pVer > specVer:
-            rq    = chkrq(prj, pkg)
-            rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
-            newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
-            colour = col.Fore.GREEN if len(rqmsg) else col.Fore.RED + col.Style.BRIGHT
+        if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
+            rq                         = chkrq(prj, pkg)
+            statusmap[idstr]['reqs']   = rq
+            statusmap[idstr]['update'] = True
+        
+        out.print(idstr, statusmap[idstr])
 
-        print(colour + '{:55s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer.public, pVer.public, newer.decode('utf-8')))
+    # out.printAll(statusmap)
 
 errs.Print()
