@@ -15,6 +15,9 @@ from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
 import osc.conf
+import colorama as col
+
+col.init(autoreset=True)
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -116,12 +119,14 @@ if __name__ == '__main__':
         sfVer = parse(sfLastVer(sfprj, src_file, specVer.public))
 
         newer = b''
+        colour = ''
         if sfVer > specVer:
             rq    = chkrq(prj, pkg)
             rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
             newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
+            colour = col.Fore.GREEN if len(rqmsg) else col.Fore.RED + col.Style.BRIGHT
 
-        print('{:45s} {:15s} {:15s} {:15s}'
+        print(colour + '{:55s} {:15s} {:15s} {:15s}'
               .format(prj+'/'+pkg, specVer.public, sfVer.public, newer.decode('utf-8')))
 
 errs.Print()

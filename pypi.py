@@ -14,6 +14,9 @@ from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
+import colorama as col
+
+col.init(autoreset=True)
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -65,12 +68,14 @@ if __name__ == '__main__':
         pVer    = parse(pypiLastVer(pypiprj))
 
         newer = b''
+        colour = ''
         if pVer > specVer:
             rq    = chkrq(prj, pkg)
             rqmsg = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
             newer = u'↑{:s}'.format(rqmsg).encode('utf-8')
+            colour = col.Fore.GREEN if len(rqmsg) else col.Fore.RED + col.Style.BRIGHT
 
-        print('{:55s} {:15s} {:15s} {:15s}'
+        print(colour + '{:55s} {:15s} {:15s} {:15s}'
               .format(prj+'/'+pkg, specVer.public, pVer.public, newer.decode('utf-8')))
 
 errs.Print()
