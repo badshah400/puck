@@ -47,7 +47,6 @@ science/octave-forge-linear-algebra
 science/octave-forge-lssa
 science/octave-forge-ltfat
 science/octave-forge-mapping
-science/octave-forge-mechanics
 science/octave-forge-miscellaneous
 science/octave-forge-msh
 science/octave-forge-mvn

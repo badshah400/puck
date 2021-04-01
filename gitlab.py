@@ -9,6 +9,8 @@ from os import path
 import feedparser as fp
 from packaging.version import Version, parse
 import osc.conf
+
+# Local modules
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
@@ -50,7 +52,7 @@ if __name__ == '__main__':
     else:
         prjpkg   = sys.argv[1]
         prj, pkg = prjpkg.split('/')
-        glurl    = '-' 
+        glurl    = '-'
         f.append([prj, pkg, glurl])
 
     statusmap = {}
@@ -66,17 +68,17 @@ if __name__ == '__main__':
             errs.Append('{:s}: Invalid Gitlab URL'.format(specgl))
             continue
 
-        statusmap[idstr] = {'specVer' : parse(stags.Version()),
-                             'upsVer' : parse(glLastVer(specgl)),
-                             'reqs'   : None,
-                             'update' : False
+        statusmap[idstr] = { 'specVer' : parse(stags.Version()),
+                             'upsVer'  : parse(glLastVer(specgl)),
+                             'reqs'    : None,
+                             'update'  : False
                            }
 
         if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
             rq                         = chkrq(prj, pkg)
             statusmap[idstr]['reqs']   = rq
             statusmap[idstr]['update'] = True
-        
+
         out.print(idstr, statusmap[idstr])
 
     # out.printAll(statusmap)
