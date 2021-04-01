@@ -16,9 +16,9 @@ class FormOut:
     def print(self, key, propmap):
         self.style = ''
         outmsg     = b''
-        if propmap['update']:
+        if propmap['update'] and not propmap['upsVer'].is_prerelease:
             rq         = propmap['reqs']
-            rqmsg      = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq[1] else ''
+            rqmsg      = ' {:s} [{:s}]'.format(rq[0],rq[1][:35]) if rq else ''
             self.style = self.upav_wirq if rqmsg else self.upav_norq
             outmsg     = u'↑{:s}'.format(rqmsg).encode('utf-8')
         print(self.style + self.formstr.format(key,
