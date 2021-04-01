@@ -27,15 +27,16 @@ def chkrq(prj,pkg):
         tgtprj = target.get('project')
         tgtpkg = target.get('package')
         if (tgtprj == prj) and (tgtpkg == pkg):
-            descr = collxml[0].find('description').text
+            descr = collxml[0].find('description')
                                                       # Get text in <description> node...
-            descr = descr.splitlines()[0]             # ... keeping only first line
+            descr = descr.text.splitlines()[0] if descr else ''
+                                                      # ... keeping only first line
             rqid  = collxml[0].get('id')              # Get the request id
             return (u'sr#{:s}'.format(rqid), descr)
         else:
-            return (u'', None)
+            return None
     else:
-        return (u'', None)
+        return None
 
 if __name__ == '__main__':
     osc.conf.get_config()
