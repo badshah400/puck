@@ -96,10 +96,10 @@ if __name__ == '__main__':
             # http://downloads.sourceforge.net/<sfprj>/<src_file>
             sfprj = src_parts[1]
 
-        if (sf_dlurl_re2.match(src_parts[0])):
+        elif (sf_dlurl_re2.match(src_parts[0])):
             # This works when the srcURL is of the form:
             # http://sourceforge.net/projects/mikmod/files/...
-            sfprj = src_parts[1]
+            sfprj = src_parts[2]
 
         elif (sf_prjurl_re1.search(stags.Url())):
             # http://sourceforge.net/projects/mathmod/
