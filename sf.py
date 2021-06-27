@@ -118,6 +118,11 @@ if __name__ == '__main__':
             continue
 
         specVer          = parse(stags.Version())
+        # Hack for scintilla which drops the dots from tarball versions:
+        # version 5.1.0 -> scintilla510.tgz; use no-dots-version
+        if sfprj == 'scintilla':
+            specVerstr = specVer.public.replace('.', '')
+            specVer    = Version(specVerstr)
         statusmap[idstr] = { 'specVer' : specVer,
                              'upsVer' : parse(sfLastVer(sfprj, src_file,
                                                         specVer.public)),
