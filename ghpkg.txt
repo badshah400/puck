@@ -12,6 +12,8 @@ Education/wxMaxima
 Education/stellarium
 graphics/libmypaint
 #graphics/mypaint
+hardware/umockdev
+hardware/power-profiles-daemon
 M17N/ibus-typing-booster
 multimedia:apps/amsynth
 multimedia:apps/fmit
@@ -30,11 +32,14 @@ science/dealii
 science/engauge-digitizer
 science/erfa
 science/form
+science/geant4
 science/muparser
 science/nlopt
 science/normaliz
 science/o2scl
 science/python-Mathics
+science/root6
 science/splinter
+science/xrootd
 server:messaging/telegram-desktop
 X11:terminals/guake

@@ -42,7 +42,7 @@ science/octave-forge-image-acquisition
 science/octave-forge-instrument-control
 science/octave-forge-interval
 science/octave-forge-io
-science/octave-forge-level-set
+#science/octave-forge-level-set
 science/octave-forge-linear-algebra
 science/octave-forge-lssa
 science/octave-forge-ltfat
@@ -53,7 +53,7 @@ science/octave-forge-mvn
 science/octave-forge-nan
 science/octave-forge-ncarray
 science/octave-forge-netcdf
-science/octave-forge-nurbs
+#science/octave-forge-nurbs
 science/octave-forge-ocs
 science/octave-forge-octclip
 science/octave-forge-octproj
@@ -61,14 +61,14 @@ science/octave-forge-odepkg
 science/octave-forge-optics
 science/octave-forge-optim
 science/octave-forge-parallel
-science/octave-forge-quaternion
+#science/octave-forge-quaternion
 science/octave-forge-queueing
 science/octave-forge-secs1d
-science/octave-forge-secs2d
+#science/octave-forge-secs2d
 science/octave-forge-secs3d
 science/octave-forge-signal
 science/octave-forge-sockets
-science/octave-forge-specfun
+#science/octave-forge-specfun
 science/octave-forge-splines
 science/octave-forge-statistics
 science/octave-forge-stk
@@ -82,4 +82,5 @@ science/openbabel
 science/plplot
 science/wcalc
 science/zhu3d
+server:database/scintilla
 X11:Utilities/xournal
