@@ -1,4 +1,5 @@
 devel:libraries:c_c++/armadillo
+devel:libraries:c_c++/healpix
 Education/libmikmod
 Education/liborigin
 Education/maxima

@@ -1,3 +1,5 @@
+Base:System/low-memory-monitor  -
+Base:System/power-profiles-daemon -
 hardware/iio-sensor-proxy       -
 hardware/switcheroo-control     -
 network/pan                     https://gitlab.gnome.org/GNOME/pan/

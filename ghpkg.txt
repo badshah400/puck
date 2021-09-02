@@ -10,10 +10,10 @@ Documentation/cppreference-doc
 Documentation/stdman
 Education/wxMaxima
 Education/stellarium
+graphics/curtail
 graphics/libmypaint
 #graphics/mypaint
 hardware/umockdev
-hardware/power-profiles-daemon
 M17N/ibus-typing-booster
 multimedia:apps/amsynth
 multimedia:apps/fmit
