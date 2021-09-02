@@ -65,10 +65,10 @@ def sfLastVer(sfprj, srcf, oldver):
     return stdver(ver)
 
 if __name__ == '__main__':
-    sf_dlurl_re1  = re.compile('^downloads?\.sf\.net$|^downloads?\.sourceforge\.net$')
-    sf_dlurl_re2  = re.compile('^sf\.net$|^sourceforge\.net$')
-    sf_prjurl_re1 = re.compile('sourceforge\.net/projects/?|sf\.net/projects/?')
-    sf_prjurl_re2 = re.compile('\.sourceforge\.net/?|\.sf\.net/?')
+    sf_dlurl_re1  = re.compile('^downloads?\.(sourceforge|sf)\.net$')
+    sf_dlurl_re2  = re.compile('^(sourceforge|sf)\.net$')
+    sf_prjurl_re1 = re.compile('(sourceforge|sf)\.net/projects/?')
+    sf_prjurl_re2 = re.compile('\.(sourceforge|sf)\.(net|io)/?')
     
     if len(sys.argv) == 1:
         f = PrjPkgList.fromfile('sfpkg.txt')
