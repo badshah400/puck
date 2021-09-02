@@ -61,6 +61,13 @@ if __name__ == '__main__':
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
+        src_url.replace('%{url}', url) # Replace %{url} in source URL with url
+        if src_url.split('/')[0] != 'https:':
+            # This means the src_url is just the file name, e.g. when using a
+            # _service file
+            src_url = url + '/-/archive/{:s}/{:s}'.format(stags.Version(),
+                                                          src_url)
+
         specgl  = gl if gl != '-' else '/'.join(src_url.split('/')[0:5])
 
         rehttps = re.compile('^https?://')

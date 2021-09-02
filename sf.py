@@ -69,6 +69,7 @@ if __name__ == '__main__':
     sf_dlurl_re2  = re.compile('^(sourceforge|sf)\.net$')
     sf_prjurl_re1 = re.compile('(sourceforge|sf)\.net/projects/?')
     sf_prjurl_re2 = re.compile('\.(sourceforge|sf)\.(net|io)/?')
+    url_http      = re.compile('^https?:')
     
     if len(sys.argv) == 1:
         f = PrjPkgList.fromfile('sfpkg.txt')
@@ -84,7 +85,13 @@ if __name__ == '__main__':
         idstr   = prj + '/' + pkg
         stags     = SpecTags(prj, pkg)
         src_url   = stags.SourceUrl()
-        src_parts = src_url.split('/')[2:] # Drop the leading 'http://'
+
+        # If src_url is not a URL (e.g. using a service file, etc.)
+        if not url_http.match(src_url):
+            src_parts = [src_url.split]
+        else:
+            src_parts = src_url.split('/')[2:] # Drop the leading 'http://'
+
         src_file  = src_parts[-1]
         specVer   = parse(stags.Version())
 

@@ -48,7 +48,12 @@ if __name__ == '__main__':
     statusmap = {}
     for prj, pkg in f.List():
         idstr   = prj + '/' + pkg
-        stags   = SpecTags(prj, pkg)
+        try:
+            stags   = SpecTags(prj, pkg)
+        except:
+            errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '
+                        'package?'.format(prj, pkg))
+            continue
         url     = stags.Url()
         src_url = stags.SourceUrl()
 
