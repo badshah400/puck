@@ -83,12 +83,13 @@ if __name__ == '__main__':
     statusmap = {}
     for prj, pkg in f.List():
         idstr   = prj + '/' + pkg
-        stags     = SpecTags(prj, pkg)
-        src_url   = stags.SourceUrl()
+        stags   = SpecTags(prj, pkg)
+        url     = stags.Url()
+        src_url = stags.SourceUrl()
 
         # If src_url is not a URL (e.g. using a service file, etc.)
         if not url_http.match(src_url):
-            src_parts = [src_url.split]
+            src_parts = [src_url]
         else:
             src_parts = src_url.split('/')[2:] # Drop the leading 'http://'
 
@@ -116,7 +117,7 @@ if __name__ == '__main__':
             # If the srcURL does not point to a dowload(s).s*f*.net
             # then we look at the spec file's URL, and split the sfprj from
             # http://<sfprj>.sourceforge.net/
-            sfprj = stags.Url().split('/')[2]
+            sfprj = url.split('/')[2]
             sfprj = sfprj.split('.')[0]
 
         if not sfprj:

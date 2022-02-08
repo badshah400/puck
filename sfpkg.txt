@@ -1,10 +1,11 @@
 devel:libraries:c_c++/armadillo
 devel:libraries:c_c++/healpix
+editors/scintilla
 Education/libmikmod
 Education/liborigin
 Education/maxima
 Education/rosegarden
-Education/tuxpaint
+#Education/tuxpaint
 Education/xaos
 Education/xplanet
 GNOME:Apps/c++-gtk-utils
@@ -83,5 +84,4 @@ science/openbabel
 science/plplot
 science/wcalc
 science/zhu3d
-server:database/scintilla
 X11:Utilities/xournal
