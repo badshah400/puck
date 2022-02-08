@@ -25,7 +25,7 @@ apiurl = osc.conf.config['apiurl']
 errs = Errors()
 
 def glLastVer(gurl):
-    urlTemp = Template('${url}/-/tags?format=atom')
+    urlTemp = Template('${url}/-/tags?sort=updated_desc&format=atom')
     url     = urlTemp.substitute(url=gurl)
     d       = fp.parse(url)
     if not len(d.entries):
