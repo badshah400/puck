@@ -29,7 +29,7 @@ def chkrq(prj,pkg):
         if (tgtprj == prj) and (tgtpkg == pkg):
             descr = collxml[0].find('description')
                                                       # Get text in <description> node...
-            descr = descr.text.splitlines()[0] if descr is not None else ''
+            descr = descr.text.splitlines()[0] if descr.text is not None else ''
                                                       # ... keeping only first line
             rqid  = collxml[0].get('id')              # Get the request id
             return (u'sr#{:s}'.format(rqid), descr)
