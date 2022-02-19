@@ -35,8 +35,12 @@ def pypiLastVer(prj):
             errs.Append('{:s}: Invalid pypi project'.format(prj))
             return Version('0.0.0')
 
-    last_tag = d.entries[0]
-    ver      = stdver(last_tag.title)
+    ver = Version('0.0.0')
+    for e in d.entries:
+        last_tag = e
+        ver      = stdver(last_tag.title)
+        if not Version(ver).is_prerelease:
+            break
     return ver
 
 if __name__ == '__main__':
