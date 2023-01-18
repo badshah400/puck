@@ -19,9 +19,9 @@ science/molsketch
 science/octave-forge-cgi
 science/octave-forge-communications
 science/octave-forge-control
-science/octave-forge-data-smoothing
 science/octave-forge-database
 science/octave-forge-dataframe
+science/octave-forge-data-smoothing
 science/octave-forge-divand
 science/octave-forge-doctest
 science/octave-forge-econometrics
