@@ -65,7 +65,10 @@ if __name__ == '__main__':
                 continue
             else:
                 ghuser, ghrepo = url.split('/')[3:5]
-        
+
+        # Handle %name in ghrepo
+        ghrepo = re.sub(r'%{?name}?', pkg, ghrepo)
+
         statusmap[idstr] = {'specVer' : parse(stags.Version()),
                              'upsVer' : parse(ghLastVer(ghuser, ghrepo)),
                              'reqs'   : None,
