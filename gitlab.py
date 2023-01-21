@@ -61,7 +61,9 @@ if __name__ == '__main__':
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
-        src_url.replace('%{url}', url) # Replace %{url} in source URL with url
+        src_url = re.sub('%{?url}?', url, src_url)   # Replace %{url} in source URL with url
+        src_url = re.sub(r'%{?name}?', pkg, src_url) # Handle %name in source URL
+
         if src_url.split('/')[0] != 'https:':
             # This means the src_url is just the file name, e.g. when using a
             # _service file
