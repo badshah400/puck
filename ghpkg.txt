@@ -20,6 +20,7 @@ graphics/mypaint
 hardware/umockdev
 M17N/Font-Downloader
 M17N/ibus-typing-booster
+M17N/nuspell
 multimedia:apps/amsynth
 multimedia:apps/fmit
 multimedia:apps/vocal
