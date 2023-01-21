@@ -60,4 +60,3 @@ science/root6
 science/splinter
 science/xrootd
 server:messaging/telegram-desktop
-X11:terminals/guake

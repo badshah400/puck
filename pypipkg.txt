@@ -34,3 +34,4 @@ science/python-ligotimegps
 science/python-Mathics
 science/python-PyCBC
 security/python-pykeepass
+X11:terminals/guake
