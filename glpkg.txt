@@ -1,5 +1,6 @@
 Base:System/low-memory-monitor  -
 Base:System/power-profiles-daemon -
+GNOME:Factory/gnome-browser-connector https://gitlab.gnome.org/GNOME/gnome-browser-connector/
 hardware/iio-sensor-proxy       -
 hardware/switcheroo-control     -
 network/pan                     https://gitlab.gnome.org/GNOME/pan/
@@ -8,6 +9,7 @@ science/LHAPDF                  https://gitlab.com/hepcedar/lhapdf
 science/Rivet                   https://gitlab.com/hepcedar/rivet
 science/SHERPA-MC               https://gitlab.com/sherpa-team/sherpa
 science/YODA                    https://gitlab.com/hepcedar/yoda
+science/clhep                   https://gitlab.cern.ch/CLHEP/CLHEP/
 science/eigen3                  https://gitlab.com/libeigen/eigen
 science/geant4                  https://gitlab.cern.ch/geant4/geant4
 science/paraview                https://gitlab.kitware.com/paraview/paraview

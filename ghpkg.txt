@@ -2,6 +2,7 @@ Application:Geo/insighttoolkit
 devel:languages:python/python-limnoria
 devel:languages:python/python-wptools
 devel:languages:python/torbrowser-launcher
+devel:languages:python:numeric/python-folium
 devel:libraries:c_c++/CastXML
 devel:libraries:c_c++/blitz
 devel:libraries:c_c++/trng
@@ -10,6 +11,7 @@ Documentation/cppreference-doc
 Documentation/stdman
 Education/wxMaxima
 Education/stellarium
+GNOME:Apps/wike
 graphics/curtail
 graphics/libmypaint
 #graphics/mypaint
@@ -21,7 +23,7 @@ multimedia:apps/vocal
 Publishing/texworks
 Publishing/gummi
 science/Ipopt
-science/apfel
+#science/apfel
 science/arpack-ng
 science/bowtie2
 science/cadabra2
