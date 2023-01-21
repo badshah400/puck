@@ -62,7 +62,7 @@ def sfLastVer(sfprj, srcf, oldver):
         if verfind:
             break;
 
-    return stdver(ver)
+    return stdver(ver.replace('_', '.'))
 
 if __name__ == '__main__':
     sf_dlurl_re1  = re.compile('^downloads?\.(sourceforge|sf)\.net$')

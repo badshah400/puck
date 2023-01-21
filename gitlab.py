@@ -36,7 +36,7 @@ def glLastVer(gurl):
             return '0.0.0'
 
     last_tag = d.entries[0]
-    ver      = last_tag.title
+    ver      = last_tag.title.replace('_', '.')
     return stdver(ver)
 
 if __name__ == '__main__':

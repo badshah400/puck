@@ -33,7 +33,7 @@ def ghLastVer(ghuser, ghrepo):
 
     last_tag = d.entries[0]
     ver      = last_tag.id.split('/')[-1]
-    return stdver(ver)
+    return stdver(ver.replace('_', '.'))
 
 if __name__ == '__main__':
     out = FormOut()
