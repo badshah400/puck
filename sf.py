@@ -131,11 +131,19 @@ if __name__ == '__main__':
         if sfprj == 'scintilla':
             specVerstr = specVer.public.replace('.', '')
             specVer    = Version(specVerstr)
+
+        uver   = sfLastVer(sfprj, src_file, specVer.public)
+        try:
+            parse(uver)
+        except:
+            errs.Append(r'{:s}/{:s}: Invalid package versiion {:s}'
+                       .format(prj, pkg, uver))
+            continue
+
         statusmap[idstr] = { 'specVer' : specVer,
-                             'upsVer' : parse(sfLastVer(sfprj, src_file,
-                                                        specVer.public)),
-                             'reqs'   : None,
-                             'update' : False
+                             'upsVer'  : parse(uver),
+                             'reqs'    : None,
+                             'update'  : False
                            }
 
         if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:

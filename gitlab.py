@@ -77,8 +77,16 @@ if __name__ == '__main__':
             errs.Append('{:s}: Invalid Gitlab URL'.format(specgl))
             continue
 
+        uver    = glLastVer(specgl)
+        try:
+            parse(uver)
+        except:
+            errs.Append(r'{:s}/{:s}: Invalid package versiion {:s}'
+                       .format(prj, pkg, uver))
+            continue
+
         statusmap[idstr] = { 'specVer' : parse(stags.Version()),
-                             'upsVer'  : parse(glLastVer(specgl)),
+                             'upsVer'  : parse(uver),
                              'reqs'    : None,
                              'update'  : False
                            }

@@ -69,8 +69,16 @@ if __name__ == '__main__':
         # Handle %name in ghrepo
         ghrepo = re.sub(r'%{?name}?', pkg, ghrepo)
 
+        uver   = ghLastVer(ghuser, ghrepo)
+        try:
+            parse(uver)
+        except:
+            errs.Append(r'{:s}/{:s}: Invalid package versiion {:s}'
+                       .format(prj, pkg, uver))
+            continue
+
         statusmap[idstr] = {'specVer' : parse(stags.Version()),
-                             'upsVer' : parse(ghLastVer(ghuser, ghrepo)),
+                             'upsVer' : parse(uver),
                              'reqs'   : None,
                              'update' : False
                            }
