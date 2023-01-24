@@ -11,6 +11,7 @@ devel:tools/grpc
 Documentation/cppreference-doc
 Documentation/stdman
 Education/stellarium
+Education/ucblogo
 Education/wxMaxima
 Education/xaos
 GNOME:Apps/wike
