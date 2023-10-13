@@ -11,7 +11,9 @@ import osc.conf
 from specparse import SpecTags
 from packaging.version import Version, parse, InvalidVersion
 from errors import Errors
+from chkrq import chkrq
 from pkglistparse import PrjPkgList
+from output import FormOut
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -50,6 +52,7 @@ if __name__ == '__main__':
             pkgs.append(a)
         f = PrjPkgList(pkgs)
 
+    out = FormOut()
     for prj, pkg in f.List():
         sp  = SpecTags(prj, pkg)
         url = sp.Url()
@@ -79,16 +82,24 @@ if __name__ == '__main__':
         except InvalidVersion:
             errs.Append('Could not parse version for {:s}/{:s}'.format(prj,pkg))
             continue
-#        print(hepver)
+
+        statusmap = {'specVer' : specVer,
+                      'upsVer' : hepver,
+                      'reqs'   : None,
+                      'update' : False
+                    }
 
         try:
-            newer = u'↑'.encode('utf-8') if (hepver > specVer) else b''
+            if (hepver > specVer):
+                rq = chkrq(prj, pkg)
+                statusmap['reqs']   = rq
+                statusmap['update'] = True
         except:
             newer = b''
             errs.Append(r'{:s}/{:s}: Invalid version from hepforge'
                          .format(prj,pkg))
-        print('{:45s} {:15s} {:15s} {:15s}'
-              .format(prj+'/'+pkg, specVer.public, hepver.public, newer.decode('utf-8')))
+
+        out.print('{}/{}'.format(prj,pkg), statusmap)
 
 ### PYTHIA CHECK ###
 pythia_url = 'http://home.thep.lu.se/~torbjorn/pythia83html/UpdateHistory.html'
