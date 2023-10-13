@@ -54,6 +54,9 @@ if __name__ == '__main__':
 
     out = FormOut()
     for prj, pkg in f.List():
+        # Whole other URL for Pythia
+        if(pkg=='pythia'):
+            continue
         sp  = SpecTags(prj, pkg)
         url = sp.Url()
         srcURL = sp.SourceUrl()
@@ -102,28 +105,36 @@ if __name__ == '__main__':
         out.print('{}/{}'.format(prj,pkg), statusmap)
 
 ### PYTHIA CHECK ###
-pythia_url = 'http://home.thep.lu.se/~torbjorn/pythia83html/UpdateHistory.html'
+pythia_url = 'https://pythia.org/history/'
 response   = urllib.request.urlopen(pythia_url)
 html       = response.read().decode('utf-8')
-li_all     = etree.HTML(html).findall('.//ol/li/a')
+htmldivs   = etree.HTML(html).findall('.//div[@class="main"]')
+li_all     = htmldivs[0].findall('.//p[@id="collapsible"]')
 li0_text   = li_all[0].text
 
 pythia_ver, rel_date = li0_text.split(':')
-rel_date   = rel_date.strip()
+rel_date             = rel_date.strip()
+prj                  = 'science'
+pkg                  = 'pythia'
+sp                   = SpecTags(prj, pkg)
+specVer              = Version(sp.Version())
+pythiaVer            = parse(pythia_ver)
+statusmap            = {'specVer' : specVer,
+                        'upsVer' : pythiaVer,
+                        'reqs'   : None,
+                        'update' : False
+                       }
 
-prj = 'science'
-pkg = 'pythia'
-sp  = SpecTags(prj, pkg)
-specVer = Version(sp.Version())
 try:
-    newer = (u'↑'.encode('utf-8') if (parse(pythia_ver) > specVer)
-             else b'')
+    if (hepver > specVer):
+        rq                  = chkrq(prj, pkg)
+        statusmap['reqs']   = rq
+        statusmap['update'] = True
 except:
-    newer = b''
     errs.Append(r'{:s}/{:s}: Invalid version from Pythia webpage'
                  .format(prj,pkg))
 
-print('{:45s} {:15s} {:15s} {:15s}'
-      .format(prj+'/'+pkg, specVer.public, pythia_ver, newer.decode('utf-8')))
+out = FormOut()
+out.print('{}/{}'.format(prj,pkg), statusmap)
 
 errs.Print()
