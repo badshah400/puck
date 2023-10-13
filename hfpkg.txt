@@ -1,11 +1,5 @@
 devel:languages:python:numeric/python-pyfeyn
 Education/dvegas
 #science/ColorFull
-science/HepMC
-science/Herwig
-science/LHAPDF
-science/Rivet
 science/rk
-science/SHERPA-MC
-science/ThePEG
 science/YODA
