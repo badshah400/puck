@@ -45,7 +45,6 @@ if __name__ == '__main__':
             pkgs.append(a)
         f = PrjPkgList(pkgs)
 
-    statusmap = {}
     for prj, pkg in f.List():
         idstr   = prj + '/' + pkg
         try:
@@ -77,17 +76,17 @@ if __name__ == '__main__':
                        .format(prj, pkg, uver))
             continue
 
-        statusmap[idstr] = {'specVer' : parse(stags.Version()),
-                             'upsVer' : parse(uver),
-                             'reqs'   : None,
-                             'update' : False
-                           }
+        statusmap = {'specVer' : parse(stags.Version()),
+                     'upsVer' : parse(uver),
+                     'reqs'   : None,
+                     'update' : False
+                    }
 
-        if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
-            rq                         = chkrq(prj, pkg)
-            statusmap[idstr]['reqs']   = rq
-            statusmap[idstr]['update'] = True
+        if statusmap['upsVer'] > statusmap['specVer']:
+            rq                  = chkrq(prj, pkg)
+            statusmap['reqs']   = rq
+            statusmap['update'] = True
 
-        out.print(idstr, statusmap[idstr])
+        out.print(idstr, statusmap)
 
 errs.Print()

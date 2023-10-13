@@ -54,32 +54,24 @@ if __name__ == '__main__':
             pkgs.append(a)
         f = PrjPkgList(pkgs)
 
-    statusmap = {}
     for prj, pkg in f.List():
         idstr   = prj + '/' + pkg
         pypiprj  = pypre.sub('', pkg)
         stags   = SpecTags(prj, pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
-        # print(srcURL)
-        # pypiprj = src_url.split('/')[4]
-        # if not re.search(r'pythonhosted\.com', src_url):
-        #     if not re.search(r'pypi\.org', url):
-        #         errs.Append(r'{:s}/{:s}: Source does not point to PyPI URL'
-        #                    .format(prj,pkg))
-        #         continue
 
-        statusmap[idstr] = {'specVer' : parse(stags.Version()),
-                             'upsVer' : parse(pypiLastVer(pypiprj)),
-                             'reqs'   : None,
-                             'update' : False
-                           }
+        statusmap = {'specVer' : parse(stags.Version()),
+                      'upsVer' : parse(pypiLastVer(pypiprj)),
+                      'reqs'   : None,
+                      'update' : False
+                    }
 
-        if statusmap[idstr]['upsVer'] > statusmap[idstr]['specVer']:
-            rq                         = chkrq(prj, pkg)
-            statusmap[idstr]['reqs']   = rq
-            statusmap[idstr]['update'] = True
+        if statusmap['upsVer'] > statusmap['specVer']:
+            rq                  = chkrq(prj, pkg)
+            statusmap['reqs']   = rq
+            statusmap['update'] = True
         
-        out.print(idstr, statusmap[idstr])
+        out.print(idstr, statusmap)
 
 errs.Print()
