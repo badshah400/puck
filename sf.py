@@ -24,18 +24,18 @@ apiurl = osc.conf.config['apiurl']
 errs = Errors()
 
 def sfLastVer(sfprj, srcf, oldver):
-    srcf = srcf.replace('+', r'\+')
-    urlTemp = Template('https://sourceforge.net/projects/${prj}/rss?path=/')
-    url     = urlTemp.substitute(prj=sfprj)
-    d       = fp.parse(url)
-    ver     = oldver
-    verfind = False
+    srcf            = srcf.replace('+', r'\+')
+    urlTemp         = Template('https://sourceforge.net/projects/${prj}/rss?path=/')
+    url             = urlTemp.substitute(prj=sfprj)
+    d               = fp.parse(url)
+    ver             = oldver
+    verfind         = False
     srcname, srcext = path.splitext(srcf)
 
-    vertemp = '[0-9]+' + '(\.?[0-9]){0,6}' + '([aA]lpha.*)?([Bb]eta.*)?'
-    anyver  = re.compile(r'[^a-zA-Z]{:s}'.format(vertemp))
-    srcf    = srcf.replace(oldver, vertemp)
-    srcname_anyver = re.compile(r'{:s}'.format(srcf))
+    vertemp         = '[0-9]+' + '(\.?[0-9]){0,6}' + '([aA]lpha.*)?([Bb]eta.*)?'
+    anyver          = re.compile(r'[^a-zA-Z]{:s}'.format(vertemp))
+    srcf            = srcf.replace(oldver, vertemp)
+    srcname_anyver  = re.compile(r'{:s}'.format(srcf))
 
     for item in d.entries:
         title     = item.title
