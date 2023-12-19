@@ -33,7 +33,7 @@ def glLastVer(gurl):
         if not len(d.entries):
             global errs
             errs.Append('{:s}: Invalid Gitlab URL'.format(gurl))
-            return '0.0.0'
+            return Version('0.0.0')
 
     last_tag = d.entries[0]
     ver      = last_tag.title.replace('_', '.')
