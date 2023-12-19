@@ -6,6 +6,7 @@ devel:languages:python/torbrowser-launcher
 devel:libraries:c_c++/blitz
 devel:libraries:c_c++/CastXML
 devel:libraries:c_c++/Catch2
+devel:libraries:c_c++/ctre
 devel:libraries:c_c++/NumCpp
 devel:libraries:c_c++/trng
 devel:tools/grpc
@@ -35,6 +36,8 @@ Publishing/texworks
 science/apfel
 science/arpack-ng
 science/avogadro
+science/blaze
+science/blis
 science/bowtie2
 science/cadabra2
 science/casacore
@@ -62,5 +65,7 @@ science/python-Mathics
 science/qcdloop
 science/root6
 science/splinter
+science/sundials
 science/xrootd
 server:messaging/telegram-desktop
+home:badshah400:Staging/tlpui

@@ -18,6 +18,7 @@ devel:languages:python/python-param
 devel:languages:python/python-pyRXP
 devel:languages:python/python-wikipedia
 devel:languages:python/python-wptools
+devel:tools:building/conan
 network/python-easypysmb
 network/python-grpcio
 network/python-grpcio-tools
