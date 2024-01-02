@@ -101,7 +101,8 @@ if __name__ == '__main__':
         if (sf_dlurl_re1.match(src_parts[0])):
             # This works when the srcURL is of the form:
             # http://downloads.sourceforge.net/<sfprj>/<src_file>
-            sfprj = src_parts[1]
+            # or http://downloads.sourceforge.net/project/<sfprj>/<src_file>
+            sfprj = src_parts[2] if src_parts[1] == 'project' else src_parts[1]
 
         elif (sf_dlurl_re2.match(src_parts[0])):
             # This works when the srcURL is of the form:
