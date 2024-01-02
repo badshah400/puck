@@ -2,19 +2,16 @@
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 import sys
-import os
 from os import path
-from string import Template
 import re
-import feedparser as fp
-from tempfile import NamedTemporaryFile
-from specparse import SpecTags
+import requests
 from packaging.version import Version, parse
+import osc.conf
+from specparse import SpecTags
 from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
-import osc.conf
 from output import FormOut
 
 # initialize osc configuration
@@ -23,54 +20,34 @@ apiurl = osc.conf.config['apiurl']
 
 errs = Errors()
 
-def sfLastVer(sfprj, srcf, oldver):
-    srcf            = srcf.replace('+', r'\+')
-    urlTemp         = Template('https://sourceforge.net/projects/${prj}/rss?path=/')
-    url             = urlTemp.substitute(prj=sfprj)
-    d               = fp.parse(url)
-    ver             = oldver
-    verfind         = False
-    srcname, srcext = path.splitext(srcf)
+def sfLastVer(sfproj, srcf, oldver):
+    '''Get last published version on SourceForge
+    '''
 
-    vertemp         = '[0-9]+' + '(\.?[0-9]){0,6}' + '([aA]lpha.*)?([Bb]eta.*)?'
-    anyver          = re.compile(r'[^a-zA-Z]{:s}'.format(vertemp))
-    srcf            = srcf.replace(oldver, vertemp)
-    srcname_anyver  = re.compile(r'{:s}'.format(srcf))
+    srcf    = srcf.replace('+', r'\+')
+    headers = { 'User-Agent': 'Linux' }
+    sf_data = requests.get(f'https://sourceforge.net/projects/{sfproj}/best_release.json',
+                           headers=headers, timeout=30)
+    if sf_data.status_code == requests.codes['ok']:
+        sf_json = sf_data.json()
+    else:
+        sf_data.raise_for_status()
 
-    for item in d.entries:
-        title     = item.title
-        itemname  = title.split('/')[-1]
-        matsrc_it = srcname_anyver.finditer(itemname)
-
-        if not matsrc_it:
-            continue
-
-        for matsrc in matsrc_it:
-            matver = anyver.search(matsrc.group())
-            itemname, itemext = path.splitext(matsrc.group())
-
-            if itemext == srcext:
-                ver = matver.group().rstrip('.')
-                if not re.match(r'^[0-9]', ver):
-                    ver = ver[1:]
-                # HACK: Drop 7z extension manually
-                if itemext == '.7z':
-                    ver = ver.rsplit('.', 1)[0]
-                verfind = True
-                break
-
-        if verfind:
-            break;
+    vertemp     = r'[0-9]+' + r'(\.?[0-9]){0,6}' + r'([aA]lpha.*)?([Bb]eta.*)?'
+    anyver      = re.compile(f'[^a-zA-Z]{vertemp}')
+    srcf        = srcf.replace(oldver, vertemp)
+    sf_fname, _ = path.splitext(sf_json['release']['filename'])
+    ver         = anyver.search(sf_fname).group()[1:]
 
     return stdver(ver.replace('_', '.'))
 
 if __name__ == '__main__':
-    sf_dlurl_re1  = re.compile('^downloads?\.(sourceforge|sf)\.net$')
-    sf_dlurl_re2  = re.compile('^(sourceforge|sf)\.net$')
-    sf_prjurl_re1 = re.compile('(sourceforge|sf)\.net/projects/?')
-    sf_prjurl_re2 = re.compile('\.(sourceforge|sf)\.(net|io)/?')
-    url_http      = re.compile('^https?:')
-    
+    sf_dlurl_re1  = re.compile(r'^downloads?\.(sourceforge|sf)\.net$')
+    sf_dlurl_re2  = re.compile(r'^(sourceforge|sf)\.net$')
+    sf_prjurl_re1 = re.compile(r'(sourceforge|sf)\.net/projects/?')
+    sf_prjurl_re2 = re.compile(r'\.(sourceforge|sf)\.(net|io)/?')
+    url_http      = re.compile(r'^https?:')
+
     if len(sys.argv) == 1:
         f = PrjPkgList.fromfile('sfpkg.txt')
     else:
