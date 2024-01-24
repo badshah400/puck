@@ -10,6 +10,7 @@ GNOME:Apps/c++-gtk-utils
 graphics/djvulibre
 graphics/djvulibre-djview4
 graphics/hugin
+science/bandicoot
 science/glucat
 science/jaxodraw
 science/mathgl

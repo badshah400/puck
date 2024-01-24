@@ -7,6 +7,7 @@ network/pan                     https://gitlab.gnome.org/GNOME/pan/
 science/clhep                   https://gitlab.cern.ch/CLHEP/CLHEP/
 science/dynare                  https://git.dynare.org/Dynare/dynare
 science/eigen3                  https://gitlab.com/libeigen/eigen
+science/framel                  https://git.ligo.org/virgo/virgoapp/Fr
 science/geant4                  https://gitlab.cern.ch/geant4/geant4
 science/HepMC                   https://gitlab.cern.ch/hepmc/HepMC3
 science/LHAPDF                  https://gitlab.com/hepcedar/lhapdf

@@ -8,6 +8,7 @@ devel:libraries:c_c++/CastXML
 devel:libraries:c_c++/Catch2
 devel:libraries:c_c++/ctre
 devel:libraries:c_c++/NumCpp
+devel:libraries:c_c++/SQLiteCpp
 devel:libraries:c_c++/trng
 devel:tools/grpc
 Documentation/cppreference-doc
