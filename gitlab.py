@@ -2,17 +2,13 @@
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 import sys
-import os
-from string import Template
 import re
-from os import path
-import feedparser as fp
-from packaging.version import Version, parse
+from packaging.version import parse, InvalidVersion
 import osc.conf
+import requests
 
 # Local modules
 from specparse import SpecTags
-from pkglistparse import PrjPkgList
 from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
@@ -22,28 +18,34 @@ from output import FormOut
 osc.conf.get_config()
 apiurl = osc.conf.config['apiurl']
 
+# Match any non-digits that come before a version string
+NON_VERSION_PREFIX = re.compile(r'^[^0-9]*')
+
 errs = Errors()
 
-def glLastVer(gurl):
-    urlTemp = Template('${url}/-/tags?sort=updated_desc&format=atom')
-    url     = urlTemp.substitute(url=gurl)
-    d       = fp.parse(url)
-    if not len(d.entries):
-        d   = fp.parse(url)
-        if not len(d.entries):
-            global errs
-            errs.Append('{:s}: Invalid Gitlab URL'.format(gurl))
-            return Version('0.0.0')
+def glLastVer(gl_inst, gl_prj, gl_repo):
+    '''Get latest tag from Gitlab instance
+    '''
+    rest_url = (F'https://{gl_inst}/api/v4/projects/'
+                F'{gl_prj}%2F{gl_repo}/repository/tags')
+    headers  = { 'User-Agent': 'Linux' }
+    gl_data  = requests.get(rest_url, headers=headers, timeout=30)
 
-    last_tag = d.entries[0]
-    ver      = last_tag.title.replace('_', '.')
+    if gl_data.status_code == requests.codes['ok']:
+        gl_json = gl_data.json()
+    else:
+        gl_data.raise_for_status()
+
+    tag_name = gl_json[0]['name']
+    tag_ver  = NON_VERSION_PREFIX.sub('', tag_name)
+    ver      = tag_ver.replace('_', '.').replace('-', '.')
     return stdver(ver)
 
 if __name__ == '__main__':
     f = []
     out = FormOut()
     if len(sys.argv) == 1:
-        with open('glpkg.txt') as F:
+        with open('glpkg.txt', encoding="utf-8") as F:
             lines = F.readlines()
         for line in lines:
             prjpkg, glurl = line.split()
@@ -55,33 +57,44 @@ if __name__ == '__main__':
         glurl    = '-'
         f.append([prj, pkg, glurl])
 
-    for prj, pkg, gl in f:
-        idstr   = prj + '/' + pkg
-        stags   = SpecTags(prj, pkg)
+    for obs_prj, obs_pkg, glurl in f:
+        idstr   = obs_prj + '/' + obs_pkg
+        stags   = SpecTags(obs_prj, obs_pkg)
         url     = stags.Url()
         src_url = stags.SourceUrl()
         src_url = re.sub('%{?url}?', url, src_url)   # Replace %{url} in source URL with url
-        src_url = re.sub(r'%{?name}?', pkg, src_url) # Handle %name in source URL
+        src_url = re.sub(r'%{?name}?', obs_pkg, src_url) # Handle %name in source URL
 
         if src_url.split('/')[0] != 'https:':
             # This means the src_url is just the file name, e.g. when using a
             # _service file
-            src_url = url + '/-/archive/{:s}/{:s}'.format(stags.Version(),
-                                                          src_url)
+            src_url = url + F'/-/archive/{stags.Version()}/{src_url}'
 
-        specgl  = gl if gl != '-' else '/'.join(src_url.split('/')[0:5])
+        specgl  = glurl if glurl != '-' else src_url
+        specgl  = specgl.rstrip('/') # Drop trailing '/'
+        # Drop everything in src_url after '/-'
+        specgl  = re.sub(r'/-.*$', '', specgl)
+        specgl_parts = specgl.split('/')[2:]
+        if len(specgl_parts) == 3:
+            git_host, git_prj, git_repo = specgl_parts
+        else:
+            git_host = specgl_parts[0]
+            git_prj  = specgl_parts[1]
+            git_repo = F'{specgl_parts[2]}%2F{specgl_parts[3]}'
 
         rehttps = re.compile('^https?://')
         if not rehttps.match(specgl):
-            errs.Append('{:s}: Invalid Gitlab URL'.format(specgl))
+            errs.Append(F'{specgl}: Invalid Gitlab URL')
             continue
 
-        uver    = glLastVer(specgl)
         try:
+            uver = glLastVer(git_host, git_prj, git_repo)
             parse(uver)
-        except:
-            errs.Append(r'{:s}/{:s}: Invalid package versiion {:s}'
-                       .format(prj, pkg, uver))
+        except InvalidVersion as _:
+            errs.Append(F'{obs_prj}/{obs_pkg}: Invalid package version {uver}')
+            continue
+        except requests.HTTPError as ex_http:
+            errs.Append(F'{obs_prj}/{obs_pkg}: ' + str(ex_http))
             continue
 
         statusmap = { 'specVer' : parse(stags.Version()),
@@ -91,7 +104,7 @@ if __name__ == '__main__':
                     }
 
         if statusmap['upsVer'] > statusmap['specVer']:
-            rq                  = chkrq(prj, pkg)
+            rq                  = chkrq(obs_prj, obs_pkg)
             statusmap['reqs']   = rq
             statusmap['update'] = True
 
