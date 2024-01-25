@@ -10,7 +10,7 @@ import osc.conf
 import osc.core
 
 class SpecTags:
-    
+
     re_src0 = re.compile('Source0?:.*')
     re_ver  = re.compile('Version:.*')
     re_url  = re.compile('U[rR][lL]:.*')

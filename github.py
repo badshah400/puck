@@ -7,7 +7,7 @@ from string import Template
 import re
 from os import path
 import feedparser as fp
-from packaging.version import Version, parse
+from packaging.version import Version, parse, InvalidVersion
 import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
@@ -59,11 +59,10 @@ if __name__ == '__main__':
         ghuser, ghrepo = src_url.split('/')[3:5]
         if not re.search(r'github\.com', src_url):
             if not re.search(r'github\.com', url):
-                errs.Append(r'{:s}/{:s}: Source does not point to github URL'
-                           .format(prj,pkg))
+                errs.Append(F'{prj}/{pkg}: Source does not point to github URL')
                 continue
-            else:
-                ghuser, ghrepo = url.split('/')[3:5]
+
+            ghuser, ghrepo = url.split('/')[3:5]
 
         # Handle %name in ghrepo
         ghrepo = re.sub(r'%{?name}?', pkg, ghrepo)
@@ -71,9 +70,8 @@ if __name__ == '__main__':
         uver   = ghLastVer(ghuser, ghrepo)
         try:
             parse(uver)
-        except:
-            errs.Append(r'{:s}/{:s}: Invalid package versiion {:s}'
-                       .format(prj, pkg, uver))
+        except InvalidVersion as _:
+            errs.Append(F'{prj}/{pkg}: Invalid package version {uver}')
             continue
 
         statusmap = {'specVer' : parse(stags.Version()),
