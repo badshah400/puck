@@ -34,5 +34,6 @@ science/python-ligo-segments
 science/python-ligotimegps
 science/python-Mathics
 science/python-PyCBC
+science/python-safe-netrc
 security/python-pykeepass
 X11:terminals/guake
