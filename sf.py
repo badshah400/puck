@@ -39,6 +39,9 @@ def sfLastVer(sfproj, srcf, oldver):
     sf_fname, _ = path.splitext(sf_json['release']['filename'])
     ver         = anyver.search(sf_fname).group()[1:]
 
+    # Hack for scintilla
+    if (sfproj == 'scintilla'):
+        ver = ver.replace('.', '')
     return stdver(ver.replace('_', '.'))
 
 if __name__ == '__main__':
