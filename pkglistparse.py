@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80:
 
 #import sys
@@ -20,17 +20,17 @@ class PrjPkgList:
             # REPLACE SPACE BY '/' THEN SPLIT BY '/'
             line = line.replace(' ', '/')
             # print(line)
-            l = line.split('/')
-            if len(l) != 2:
+            line_parts = line.split('/')
+            if len(line_parts) != 2:
                 continue
             # print(l)
-            self.prjpkgs.append((l[0], l[1].rstrip('\n')))
+            self.prjpkgs.append((line_parts[0], line_parts[1].rstrip('\n')))
 
     @classmethod
     def fromfile(cls, filename):
         arr = []
 
-        f = open(filename, 'r')
+        f = open(filename, 'r', encoding='utf-8')
         for line in f:
             # IGNORE COMMENTED LINES
             if line[0] == '#':
