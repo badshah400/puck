@@ -21,6 +21,7 @@ GNOME:Apps/wike
 graphics/curtail
 graphics/libmypaint
 graphics/mypaint
+hardware/tlpui
 hardware/umockdev
 M17N/Font-Downloader
 M17N/ibus-typing-booster
@@ -68,5 +69,6 @@ science/root6
 science/splinter
 science/sundials
 science/xrootd
+science:machinelearning/dlib
 server:messaging/telegram-desktop
 home:badshah400:Staging/tlpui
