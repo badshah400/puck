@@ -45,7 +45,7 @@ def pypiLastVer(prj):
 
 if __name__ == '__main__':
     out = FormOut()
-    pypre   = re.compile('^python[2-3]?\-')
+    pypre   = re.compile(r'^python[2-3]?\-')
     if len(sys.argv) == 1:
         f = PrjPkgList.fromfile('pypipkg.txt')
     else:
