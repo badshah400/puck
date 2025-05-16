@@ -7,6 +7,7 @@ Education/maxima
 Education/tuxpaint
 Education/xplanet
 GNOME:Apps/c++-gtk-utils
+games/ltris2
 graphics/djvulibre
 graphics/djvulibre-djview4
 graphics/hugin

@@ -1,5 +1,6 @@
 Base:System/low-memory-monitor  -
 Base:System/power-profiles-daemon -
+GNOME:Apps/iotas                https://gitlab.gnome.org/World/iotas
 GNOME:Factory/gnome-browser-connector https://gitlab.gnome.org/GNOME/gnome-browser-connector/
 hardware/iio-sensor-proxy       -
 hardware/switcheroo-control     -
