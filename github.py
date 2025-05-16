@@ -31,9 +31,26 @@ def ghLastVer(ghuser, ghrepo):
         errs.Append('{:s}/{:s}: Invalid github project'.format(ghuser, ghrepo))
         return Version('0.0.0')
 
-    last_tag = d.entries[0]
-    ver      = last_tag.id.split('/')[-1]
-    return stdver(ver.replace('_', '.'))
+    # Loop entries to get tag with valid version, max 5 times, otherwise give up
+    MAX_ENTRIES = 5
+    for cnt in range(0, MAX_ENTRIES):
+        last_tag = d.entries[cnt]
+        ver      = last_tag.id.split('/')[-1]
+
+        # ghrepo ending in digits messes up version search, drop them from tag name
+        if end_num_patt := re.search(r'\d+$', ghrepo):
+            ver = ver.replace(end_num_patt.string, '', 1)
+
+        try:
+            ver = parse(stdver(ver.replace('_', '.')))
+            return ver
+        except:
+            pass
+
+    errs.Append('{:s}/{:s}: Unable to obtain version from last {:d} tags'
+                .format(ghuser, ghrepo, MAX_ENTRIES))
+    return Version('0.0.0')
+
 
 if __name__ == '__main__':
     out = FormOut()
@@ -65,17 +82,13 @@ if __name__ == '__main__':
             ghuser, ghrepo = url.split('/')[3:5]
 
         # Handle %name in ghrepo
-        ghrepo = re.sub(r'%{?name}?', pkg, ghrepo)
+        ghrepo    = re.sub(r'%{?name}?', pkg, ghrepo)
+        # Handle ghrepo ending in .git
+        ghrepo    = re.sub(r'.git$', '', ghrepo)
 
-        uver   = ghLastVer(ghuser, ghrepo)
-        try:
-            parse(uver)
-        except InvalidVersion as _:
-            errs.Append(F'{prj}/{pkg}: Invalid package version {uver}')
-            continue
-
+        uver      = ghLastVer(ghuser, ghrepo)
         statusmap = {'specVer' : parse(stags.Version()),
-                     'upsVer' : parse(uver),
+                     'upsVer' : uver,
                      'reqs'   : None,
                      'update' : False
                     }
