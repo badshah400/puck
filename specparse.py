@@ -2,6 +2,7 @@
 # vim: set ai et ts=4 sw=4 tw=80:
 
 import sys
+from lxml import etree
 from os import path, mkdir
 from subprocess import call, check_output, PIPE
 from tempfile import NamedTemporaryFile
@@ -40,23 +41,31 @@ class SpecTags:
             f.write(spec)
             f.flush()
 
-#            print(f.name)
             try:
                 spec_exp = check_output(['rpmspec', '-P', f.name], stderr=PIPE).decode('utf-8')
                 self.Ver = self.re_ver.search(spec_exp).group().split(' ')[-1]
             except:
                 spec_exp = check_output(['rpmdev-spectool', '-S', f.name]).decode('utf-8')
                 self.Ver = self.re_ver.search(spec).group().split(' ')[-1]
-#            print(src0)
 
         if spec_exp:
             self.srcURL = self.re_src0.search(spec_exp).group().split(' ')[-1]
         else:
             self.srcURL = self.re_src0.search(spec).group().split(' ')[-1]
-#        print(srcURL)
+
+        try:
+            # If srcURL is really a URL, then it will have at least 3 parts (http://...)
+            _ = self.srcURL.split('/')[2]
+        except IndexError:
+            # Get srcURL from _service file
+            service_file = osc.core.http_GET(u.replace(f"{pkg}.spec", "_service"))
+            service_xml  = b''.join(service_file.readlines())
+            service_root = etree.fromstring(service_xml.decode('utf-8'))
+            for f in service_root.findall(".//param[@name]"):
+                if f.attrib["name"] == "url":
+                    self.srcURL = f.text
 
         self.URL = self.re_url.search(spec).group().split()[-1]
-#        print(specver)
 
     def Name(self):
         return self.Name
