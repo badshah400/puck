@@ -91,9 +91,18 @@ if __name__ == '__main__':
         # Handle %name in ghrepo
         ghrepo    = re.sub(r'%{?name}?', pkg, ghrepo)
         # Handle ghrepo ending in .git
-        ghrepo    = re.sub(r'.git$', '', ghrepo)
+        ghrepo = re.sub(r'.git$', '', ghrepo)
 
-        uver      = ghLastVer(ghuser, ghrepo)
+        uver   = ghLastVer(ghuser, ghrepo)
+        try:
+            parse(uver)
+        except InvalidVersion as _:
+            errs.Append(F'{prj}/{pkg}: Invalid package version {uver}')
+            continue
+        except TypeError as _:
+            errs.Append(F'{prj}/{pkg}: Unable to obtain package version {uver}')
+            continue
+
         statusmap = {'specVer' : parse(stags.Version()),
                      'upsVer' : uver,
                      'reqs'   : None,
