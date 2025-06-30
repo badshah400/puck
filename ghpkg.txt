@@ -53,7 +53,6 @@ science/casacore
 science/casarest
 science/clinfo
 science/dealii
-#science/engauge-digitizer
 science/erfa
 science/form
 science/hdf5

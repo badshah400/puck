@@ -76,4 +76,4 @@ science/molsketch
 #science/plplot
 #science/wcalc
 #science/zhu3d
-X11:Utilities/xournal
+# X11:Utilities/xournal
