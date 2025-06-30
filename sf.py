@@ -25,13 +25,21 @@ def sfLastVer(sfproj, srcf, oldver):
     '''
 
     srcf    = srcf.replace('+', r'\+')
-    headers = { 'User-Agent': 'Linux' }
+    headers = {
+               'Accept'        : '*/*',
+               'User-Agent'    : 'curl/8.14.1',
+               'cache-control' : 'no-cache',
+               'Connection'    : 'keep-alive',
+              }
     sf_data = requests.get(f'https://sourceforge.net/projects/{sfproj}/best_release.json',
-                           headers=headers, timeout=30)
+                           headers=headers, timeout=30,
+                           allow_redirects=False)
     if sf_data.status_code == requests.codes['ok']:
         sf_json = sf_data.json()
     else:
+        errs.Append(f'{pkg!s}/{prj!s}: Unable to obtain sourceforge data.')
         sf_data.raise_for_status()
+        return stdver('0.0.0')
 
     vertemp     = r'[0-9]+' + r'(\.?[0-9]){0,6}' + r'([aA]lpha.*)?([Bb]eta.*)?'
     anyver      = re.compile(f'[^a-zA-Z]{vertemp}')
