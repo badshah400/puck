@@ -7,6 +7,7 @@ from os import path, mkdir
 from subprocess import run, CalledProcessError
 from tempfile import NamedTemporaryFile
 import re
+from urllib.error import HTTPError
 import osc.conf
 import osc.core
 
@@ -24,6 +25,20 @@ class SpecTags:
         self.Ver     = ''
         self.URL     = ''
         self.srcURL  = ''
+
+        # Check if package is multi-build and error out early if so
+        multi = osc.core.makeurl(self.apiurl, ['source', prj, pkg, '_multibuild'],
+                                 query={'expand': 1})
+        try:
+            osc.core.http_GET(multi)
+            raise RuntimeError(f'Cannot handle multibuild package; bailing out.')
+        except HTTPError as e:
+            if (404 == e.getcode()):
+                # This means no _multibuild file found, so we are good to proceed
+                pass
+            else:
+                # Re-raise if something else has gone wrong
+                raise e
 
         u   = osc.core.makeurl(self.apiurl, ['source', prj, pkg, pkg + '.spec'],
                                query = { 'expand': 1 })
