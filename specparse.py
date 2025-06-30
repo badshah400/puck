@@ -65,8 +65,7 @@ class SpecTags:
                 proc = run(rpmspec_cmdline, shell=True, capture_output=True, text=True, check=True)
                 self.URL, self.Ver = proc.stdout.split()
             except CalledProcessError as e:
-                print(f'{prj}/{pkg}: {e.stderr}')
-                sys.exit(-1)
+                raise e
 
             try:
                 spec_parse  = run(['/usr/bin/rpmspec', '-P', f.name],

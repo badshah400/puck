@@ -6,6 +6,7 @@ import re
 from packaging.version import parse, InvalidVersion
 import osc.conf
 import requests
+from subprocess import CalledProcessError
 
 # Local modules
 from specparse import SpecTags
@@ -59,7 +60,18 @@ if __name__ == '__main__':
 
     for obs_prj, obs_pkg, glurl in f:
         idstr   = obs_prj + '/' + obs_pkg
-        stags   = SpecTags(obs_prj, obs_pkg)
+        try:
+            stags   = SpecTags(obs_prj, obs_pkg)
+        except RuntimeError as e:
+            errs.Append(f'{obs_prj}/{obs_pkg}: {e}')
+            continue
+        except CalledProcessError as e:
+            errs.Append(f'{obs_prj}/{obs_pkg}: rpmspec error while parsing specfile.')
+            continue
+        except:
+            errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '
+                        'package?'.format(obs_prj, obs_pkg))
+            continue
         url     = stags.Url()
         src_url = stags.SourceUrl()
         src_url = re.sub('%{?url}?', url, src_url)   # Replace %{url} in source URL with url

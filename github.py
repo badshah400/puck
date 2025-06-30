@@ -15,6 +15,7 @@ from errors import Errors
 from stdver import stdver
 from chkrq import chkrq
 from output import FormOut
+from subprocess import CalledProcessError
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -68,6 +69,9 @@ if __name__ == '__main__':
             stags   = SpecTags(prj, pkg)
         except RuntimeError as e:
             errs.Append(f'{prj}/{pkg}: {e}')
+            continue
+        except CalledProcessError as e:
+            errs.Append(f'{prj}/{pkg}: rpmspec error while parsing specfile.')
             continue
         except:
             errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '

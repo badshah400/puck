@@ -70,7 +70,18 @@ if __name__ == '__main__':
     out = FormOut()
     for prj, pkg in f.List():
         idstr   = prj + '/' + pkg
-        stags   = SpecTags(prj, pkg)
+        try:
+            stags   = SpecTags(prj, pkg)
+        except RuntimeError as e:
+            errs.Append(f'{prj}/{pkg}: {e}')
+            continue
+        except CalledProcessError as e:
+            errs.Append(f'{prj}/{pkg}: rpmspec error while parsing specfile.')
+            continue
+        except:
+            errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '
+                        'package?'.format(prj, pkg))
+            continue
         url     = stags.Url()
         src_url = stags.SourceUrl()
 
