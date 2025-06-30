@@ -47,8 +47,8 @@ class SpecTags:
         try:
             spec = b''.join(fi.readlines()).decode('utf-8')
         except:
-            print(f"{prj}/{pkg}: Error fetching spec file.")
-            sys.exit(-1)
+            raise RuntimeError("Error fetching spec file.")
+            pass
 
         cachedir = path.join('.', '.osc')
         if not path.exists(cachedir):
