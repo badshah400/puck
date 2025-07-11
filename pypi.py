@@ -42,7 +42,10 @@ def pypiLastVer(prj):
         ver      = stdver(last_tag.title)
         if not Version(ver).is_prerelease:
             break
-    return ver
+    try:
+        return parse(ver)
+    except:
+        errs.Append('{:s}: unable to parse version from PyPI'.format(prj))
 
 if __name__ == '__main__':
     out = FormOut()
@@ -74,7 +77,7 @@ if __name__ == '__main__':
         src_url = stags.SourceUrl()
 
         statusmap = {'specVer' : parse(stags.Version()),
-                      'upsVer' : parse(pypiLastVer(pypiprj)),
+                      'upsVer' : pypiLastVer(pypiprj),
                       'reqs'   : None,
                       'update' : False
                     }
