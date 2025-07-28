@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
+# mypy: disable-error-code=import-untyped
 
 import sys
 import re
@@ -7,6 +8,7 @@ from packaging.version import parse, InvalidVersion
 import osc.conf
 import requests
 from subprocess import CalledProcessError
+import time
 
 # Local modules
 from specparse import SpecTags
@@ -121,6 +123,7 @@ if __name__ == '__main__':
             statusmap['update'] = True
 
         out.print(idstr, statusmap)
+        time.sleep(1.0)
 
     # out.printAll(statusmap)
 
