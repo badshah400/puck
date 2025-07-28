@@ -69,7 +69,8 @@ class SpecTags:
                 f.write(spec)
                 f.flush()
 
-                rpmspec_cmdline = '/usr/bin/rpmspec --srpm -q --qf "%{url} %{version}" '
+                RPMSPEC_BIN     = run(['which', 'rpmspec'], capture_output=True, text=True)
+                rpmspec_cmdline = f'{RPMSPEC_BIN.stdout.strip()} --srpm -q --qf "%{{url}} %{{version}}" '
                 rpmspec_cmdline += ' '.join([f'--define="{macro} %nil"' for macro in UNDEFINED_MACROS])
                 rpmspec_cmdline += f' {f.name}'
                 try:
