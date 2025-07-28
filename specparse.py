@@ -1,13 +1,12 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # vim: set ai et ts=4 sw=4 tw=100:
 
-import sys
-from lxml import etree
 from os import path, mkdir
 from subprocess import run, CalledProcessError
 from tempfile import NamedTemporaryFile
 import re
 from urllib.error import HTTPError
+from lxml import etree
 import osc.conf
 import osc.core
 
@@ -16,22 +15,23 @@ import osc.core
 # `--define='useless_macro %nil'` for each macro.
 UNDEFINED_MACROS = ['openmpi_requires', 'sysusers_requires']
 
+
 class SpecTags:
     re_src0 = re.compile('Source0?:.*')
     apiurl  = osc.conf.config['apiurl']
 
     def __init__(self, prj, pkg):
-        self.Name    = ''
-        self.Ver     = ''
-        self.URL     = ''
-        self.srcURL  = ''
+        self.name    = ''
+        self.ver     = ''
+        self.url     = ''
+        self.src_url = ''
 
         # Check if package is multi-build and error out early if so
         multi = osc.core.makeurl(self.apiurl, ['source', prj, pkg, '_multibuild'],
                                  query={'expand': 1})
         try:
             osc.core.http_GET(multi)
-            raise RuntimeError(f'Cannot handle multibuild package; bailing out.')
+            raise RuntimeError('Cannot handle multibuild package; bailing out.')
         except HTTPError as e:
             if (404 == e.getcode()):
                 # This means no _multibuild file found, so we are good to proceed
@@ -40,13 +40,13 @@ class SpecTags:
                 # Re-raise if something else has gone wrong
                 raise e
 
-        u   = osc.core.makeurl(self.apiurl, ['source', prj, pkg, pkg + '.spec'],
-                               query = { 'expand': 1 })
+        u = osc.core.makeurl(self.apiurl, ['source', prj, pkg, pkg + '.spec'],
+                             query={'expand': 1})
 
-        fi = osc.core.http_GET(u)
         try:
+            fi = osc.core.http_GET(u)
             spec = b''.join(fi.readlines()).decode('utf-8')
-        except:
+        except HTTPError:
             raise RuntimeError("Error fetching spec file.")
             pass
 
@@ -63,7 +63,7 @@ class SpecTags:
             rpmspec_cmdline += f' {f.name}'
             try:
                 proc = run(rpmspec_cmdline, shell=True, capture_output=True, text=True, check=True)
-                self.URL, self.Ver = proc.stdout.split()
+                self.url, self.ver = proc.stdout.split()
             except CalledProcessError as e:
                 raise e
 
@@ -71,13 +71,13 @@ class SpecTags:
                 spec_parse  = run(['/usr/bin/rpmspec', '-P', f.name],
                                   capture_output=True, text=True, check=True)
                 spec_exp    = spec_parse.stdout
-                self.srcURL = self.re_src0.search(spec_exp).group().split(' ')[-1]
-            except CalledProcessError as e:
-                self.srcURL = self.re_src0.search(spec).group().split(' ')[-1]
+                self.src_url = self.re_src0.search(spec_exp).group().split(' ')[-1]
+            except CalledProcessError:
+                self.src_url = self.re_src0.search(spec).group().split(' ')[-1]
 
         try:
             # If srcURL is really a URL, then it will have at least 3 parts (http://...)
-            _ = self.srcURL.split('/')[2]
+            _ = self.src_url.split('/')[2]
         except IndexError:
             # Get srcURL from _service file
             service_file = osc.core.http_GET(u.replace(f"{pkg}.spec", "_service"))
@@ -85,17 +85,17 @@ class SpecTags:
             service_root = etree.fromstring(service_xml.decode('utf-8'))
             for f in service_root.findall(".//param[@name]"):
                 if f.attrib["name"] == "url":
-                    self.srcURL = f.text
+                    self.src_url = f.text
 
     def Name(self):
-        return self.Name
+        return self.name
 
     def Version(self):
-        return self.Ver
+        return self.ver
 
     def Url(self):
-        return self.URL
+        return self.url
 
     def SourceUrl(self):
-        return self.srcURL
+        return self.src_url
 
