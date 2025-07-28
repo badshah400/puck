@@ -33,7 +33,6 @@ M17N/ibus-typing-booster
 M17N/nuspell
 multimedia:apps/amsynth
 multimedia:apps/fmit
-multimedia:apps/vocal
 network/davix
 network/onioncat
 network/nextcloud-desktop
@@ -45,7 +44,6 @@ science/apfel
 science/arpack-ng
 science/avogadro
 science/blaspp
-science/blaze
 science/blis
 science/bowtie2
 science/cadabra2
@@ -65,17 +63,13 @@ science/o2scl
 science/octave-forge-bim
 science/octave-forge-ltfat
 science/octave-forge-msh
-science/octave-forge-octclip
-science/octave-forge-octproj
 science/octave-forge-statistics
 science/openbabel
 science/praat
 science/python-casacore
 science/python-Mathics
 science/python-mathicsscript
-science/python-Django
 science/qcdloop
-science/root6
 science/splinter
 science/sundials
 science/wannier90
