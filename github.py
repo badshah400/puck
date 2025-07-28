@@ -28,9 +28,7 @@ def ghLastVer(ghuser, ghrepo):
     url     = urlTemp.substitute(user=ghuser, repo=ghrepo)
     d       = fp.parse(url)
     if not len(d.entries):
-        global errs
-        errs.Append('{:s}/{:s}: Invalid github project'.format(ghuser, ghrepo))
-        return Version('0.0.0')
+        raise RuntimeError('Invalid github project')
 
     # ghrepo ending in digits messes up version search, drop them from tag name
     end_num_patt = re.search(r'\d+$', ghrepo)
@@ -93,7 +91,11 @@ if __name__ == '__main__':
         # Handle ghrepo ending in .git
         ghrepo = re.sub(r'.git$', '', ghrepo)
 
-        uver   = ghLastVer(ghuser, ghrepo)
+        try:
+            uver   = ghLastVer(ghuser, ghrepo)
+        except RuntimeError as e:
+            errs.Append(f'{prj}/{pkg}: {e}')
+
         statusmap = {'specVer' : parse(stags.Version()),
                      'upsVer' : uver,
                      'reqs'   : None,
