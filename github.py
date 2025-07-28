@@ -15,6 +15,7 @@ from stdver import stdver
 from chkrq import chkrq
 from output import FormOut
 from subprocess import CalledProcessError
+from urllib.error import HTTPError
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -26,8 +27,10 @@ def ghLastVer(ghuser, ghrepo):
     urlTemp = Template('https://github.com/${user}/${repo}/tags.atom')
     url     = urlTemp.substitute(user=ghuser, repo=ghrepo)
     d       = fp.parse(url)
+    if d.status > 400:
+        raise HTTPError(f'Error accessing {url} [HTTP code {d.status}]')
     if not len(d.entries):
-        raise RuntimeError(f'Invalid github project "{ghrepo}"')
+        raise RuntimeError(f'Invalid github project/repo "{ghuser}/{ghrepo}"')
 
     # ghrepo ending in digits messes up version search, drop them from tag name
     end_num_patt = re.search(r'\d+$', ghrepo)
@@ -61,7 +64,7 @@ if __name__ == '__main__':
     for prj, pkg in f.List():
         idstr   = prj + '/' + pkg
         try:
-            stags   = SpecTags(prj, pkg)
+            stags = SpecTags(prj, pkg)
         except RuntimeError as e:
             errs.Append(f'{prj}/{pkg}: {e}')
             continue
@@ -97,7 +100,6 @@ if __name__ == '__main__':
                 continue
             ghrepo = ''.join(macro_def)
 
-
         # Handle ghrepo ending in .git
         ghrepo = re.sub(r'.git$', '', ghrepo)
 
@@ -105,6 +107,9 @@ if __name__ == '__main__':
             uver   = ghLastVer(ghuser, ghrepo)
         except RuntimeError as e:
             errs.Append(f'{prj}/{pkg}: {e}')
+            continue
+        except HTTPError as h:
+            errs.Append(f'{prj}/{pkg}: {h}')
             continue
 
         statusmap = {'specVer' : parse(stags.Version()),
