@@ -30,6 +30,7 @@ class SpecTags:
         self.ver     = ''
         self.url     = ''
         self.src_url = ''
+        self.spec    = ''
 
         # Check if package is multi-build and error out early if so
         multi = osc.core.makeurl(self.API_URL, ['source', prj, pkg, '_multibuild'],
@@ -51,7 +52,7 @@ class SpecTags:
 
         try:
             fi = osc.core.http_GET(u)
-            spec = b''.join(fi.readlines()).decode('utf-8')
+            self.spec = b''.join(fi.readlines()).decode('utf-8')
         except HTTPError:
             raise RuntimeError("Error fetching spec file.")
             pass
@@ -61,12 +62,12 @@ class SpecTags:
             mkdir(cachedir)
 
         if is_multi_flavoured:
-            self.url = self.RE_URL.search(spec).group().split(' ')[-1]
-            self.ver = self.RE_VER.search(spec).group().split(' ')[-1]
-            self.src_url = self.RE_SRC0.search(spec).group()
+            self.url = self.RE_URL.search(self.spec).group().split(' ')[-1]
+            self.ver = self.RE_VER.search(self.spec).group().split(' ')[-1]
+            self.src_url = self.RE_SRC0.search(self.spec).group()
         else:
             with NamedTemporaryFile(mode='w', suffix='.spec', dir=cachedir) as f:
-                f.write(spec)
+                f.write(self.spec)
                 f.flush()
 
                 RPMSPEC_BIN     = run(['which', 'rpmspec'], capture_output=True, text=True)
@@ -85,7 +86,7 @@ class SpecTags:
                     spec_exp    = spec_parse.stdout
                     self.src_url = self.RE_SRC0.search(spec_exp).group().split(' ')[-1]
                 except CalledProcessError:
-                    self.src_url = self.RE_SRC0.search(spec).group().split(' ')[-1]
+                    self.src_url = self.RE_SRC0.search(self.spec).group().split(' ')[-1]
 
             try:
                 # If srcURL is really a URL, then it will have at least 3 parts (http://...)
@@ -112,3 +113,5 @@ class SpecTags:
     def SourceUrl(self):
         return self.src_url
 
+    def Spec(self):
+        return self.spec

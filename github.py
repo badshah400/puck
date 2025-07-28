@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
+# mypy: disable-error-code=import-untyped
 
 import sys
-import os
 from string import Template
 import re
-from os import path
 import feedparser as fp
-from packaging.version import Version, parse, InvalidVersion
+from packaging.version import parse
 import osc.conf
 from specparse import SpecTags
 from pkglistparse import PrjPkgList
@@ -28,7 +27,7 @@ def ghLastVer(ghuser, ghrepo):
     url     = urlTemp.substitute(user=ghuser, repo=ghrepo)
     d       = fp.parse(url)
     if not len(d.entries):
-        raise RuntimeError('Invalid github project')
+        raise RuntimeError(f'Invalid github project "{ghrepo}"')
 
     # ghrepo ending in digits messes up version search, drop them from tag name
     end_num_patt = re.search(r'\d+$', ghrepo)
@@ -43,12 +42,10 @@ def ghLastVer(ghuser, ghrepo):
 
         try:
             return parse(stdver(ver.replace('_', '.')))
-        except:
+        except Exception:
             pass
 
-    errs.Append('{:s}/{:s}: Unable to obtain version from last {:d} tags'
-                .format(ghuser, ghrepo, MAX_ENTRIES))
-    return Version('0.0.0')
+    raise RuntimeError(f'Unable to obtain version from last {MAX_ENTRIES:d} tags')
 
 
 if __name__ == '__main__':
@@ -68,10 +65,10 @@ if __name__ == '__main__':
         except RuntimeError as e:
             errs.Append(f'{prj}/{pkg}: {e}')
             continue
-        except CalledProcessError as e:
+        except CalledProcessError:
             errs.Append(f'{prj}/{pkg}: rpmspec error while parsing specfile.')
             continue
-        except:
+        except Exception:
             errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '
                         'package?'.format(prj, pkg))
             continue
@@ -95,6 +92,7 @@ if __name__ == '__main__':
             uver   = ghLastVer(ghuser, ghrepo)
         except RuntimeError as e:
             errs.Append(f'{prj}/{pkg}: {e}')
+            continue
 
         statusmap = {'specVer' : parse(stags.Version()),
                      'upsVer' : uver,
