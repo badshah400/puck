@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
+# vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
 # mypy: disable-error-code=import-untyped
 
 import sys
@@ -84,7 +84,20 @@ if __name__ == '__main__':
             ghuser, ghrepo = url.split('/')[3:5]
 
         # Handle %name in ghrepo
-        ghrepo    = re.sub(r'%{?name}?', pkg, ghrepo)
+        ghrepo = re.sub(r'%{?name}?', pkg, ghrepo)
+
+        if ghrepo[0] == '%': # Leading % implies an rpm macro which is not %name
+            bare_macro = ghrepo.lstrip('%').strip('{}')
+            macro_line = re.search(rf'^%(define|global)\s+{bare_macro}\s+.*', stags.Spec(),
+                                   flags=re.MULTILINE)
+            try:
+                macro_def = macro_line.group(0).split(' ')[2:]
+            except AttributeError:
+                errs.Append(f'{prj}/{pkg}: Error when resolving macro {ghrepo}')
+                continue
+            ghrepo = ''.join(macro_def)
+
+
         # Handle ghrepo ending in .git
         ghrepo = re.sub(r'.git$', '', ghrepo)
 
