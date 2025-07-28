@@ -14,7 +14,9 @@ import osc.core
 # List of uncommon macros that need additional macro defintion files for rpmspec to expand. Instead,
 # as they are anyway unnecessary for our purposes, we just set them to %nil by passing
 # `--define='useless_macro %nil'` for each macro.
-UNDEFINED_MACROS = ['openmpi_requires', 'sysusers_requires']
+UNDEFINED_MACROS = ['glib2_gsettings_schema_requires',
+                    'openmpi_requires',
+                    'sysusers_requires']
 
 
 class SpecTags:
@@ -38,7 +40,7 @@ class SpecTags:
         is_multi_flavoured = False
         try:
             osc.core.http_GET(multi)
-            is_multi_flavoured = True # rpmspec won't work, so we have to grep manually
+            is_multi_flavoured = True  # rpmspec won't work, so we have to grep manually
         except HTTPError as e:
             if (404 == e.getcode()):
                 # This means no _multibuild file found, so we are good to proceed with rpmspec
