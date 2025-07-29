@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "puck"
+dynamic = ["version"]
+description = "A command-line utility to compare package versions on OBS against upstream"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+keywords = ["packaging", "openSUSE", "Build Service", "osc"]
+authors = [
+  { name = "Atri Bhattacharya", email = "atrib@duck.com" },
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+dependencies = ['rich']
+
+[project.scripts]
+tartex = "puck.puck:cmp_version"
+
+[project.urls]
+Documentation = "https://github.com/Atri Bhattacharya/puck#readme"
+Issues = "https://github.com/Atri Bhattacharya/puck/issues"
+Source = "https://github.com/Atri Bhattacharya/puck"
+
+[tool.hatch.version]
+path = "src/puck/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/puck tests}"
+
+[tool.coverage.run]
+source_pkgs = ["puck", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/puck/__about__.py",
+]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
+
+[tool.coverage.paths]
+puck = ["src/puck", "*/puck/src/puck"]
+tests = ["tests", "*/puck/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]

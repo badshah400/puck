@@ -26,6 +26,7 @@ NON_VERSION_PREFIX = re.compile(r'^[^0-9]*')
 
 errs = Errors()
 
+
 def glLastVer(gl_inst, gl_prj, gl_repo):
     '''Get latest tag from Gitlab instance
     '''
