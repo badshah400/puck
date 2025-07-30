@@ -1,12 +1,6 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=80:
 
-#import sys
-#import os
-#from os import path
-#import numpy as np
-#import scipy as sp
-#from lxml import etree
 
 class PrjPkgList:
     def __init__(self, pkglist):

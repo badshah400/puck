@@ -24,10 +24,10 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
-dependencies = ['rich']
+dependencies = ['colorama', 'feedparser', 'lxml', 'osc', 'packaging', 'rich']
 
 [project.scripts]
-tartex = "puck.puck:cmp_version"
+puck = "puck.puck:cmp_version"
 
 [project.urls]
 Documentation = "https://github.com/Atri Bhattacharya/puck#readme"
@@ -65,3 +65,6 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[tool.mypy]
+allow-import-untyped = "True"

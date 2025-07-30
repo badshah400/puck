@@ -4,7 +4,7 @@
 import sys
 import osc.conf
 import osc.core
-from pkglistparse import PrjPkgList
+from puck.pkglistparse import PrjPkgList
 from lxml import etree
 
 def chkrq(prj,pkg):
