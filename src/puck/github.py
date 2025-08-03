@@ -8,6 +8,7 @@ from packaging.version import parse
 import osc.conf
 
 from puck.scrapers.base.atom_reader import AtomReader
+from puck.stdver import stdver
 
 # initialize osc configuration
 osc.conf.get_config()
@@ -30,13 +31,16 @@ class GithubVersion(AtomReader):
         # ghrepo ending in digits messes up version search, drop them from tag name
         # along with separator, if any
         gh_repo_end_digits = re.search(r'\d+$', self.ghrepo)
-        self.tag_end_digits_cleanup_regex = re.compile(rf"{gh_repo_end_digits.group(0)}[._-]?")
+        self.tag_end_digits_cleanup_regex = (re.compile(rf"{gh_repo_end_digits.group(0)}[_-]")
+                                             if gh_repo_end_digits else None)
 
     def get_version(self):
         # Loop entries to get tag with valid version, max 5 times, otherwise give up
         for cnt in range(0, self.MAX_ENTRIES):
             tag = self.get_tag_id(cnt)
-            ver = re.sub(self.tag_end_digits_cleanup_regex, '', tag)
+            ver = stdver(tag, self.ghrepo)
+            ver = (re.sub(self.tag_end_digits_cleanup_regex, '', ver)
+                   if self.tag_end_digits_cleanup_regex else ver)
             try:
                 return parse(ver.replace('_', '.'))
             except Exception:
