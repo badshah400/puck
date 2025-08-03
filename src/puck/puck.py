@@ -153,6 +153,7 @@ def cmp_version():
             G = GithubVersion(ghuser, ghrepo)
         except Exception as e:
             errs.Append(f'{prj}/{pkg}: {e}')
+            continue
         try:
             uver   = G.get_version()
         except RuntimeError as e:
