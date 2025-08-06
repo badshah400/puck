@@ -3,9 +3,13 @@
 # mypy: disable-error-code=import-untyped
 
 from string import Template
+from contextlib import suppress
 import re
-from packaging.version import parse
+import sys
+from pathlib import Path
+from packaging.version import parse, InvalidVersion
 import osc.conf
+import json
 
 from puck.scrapers.base.atom_reader import AtomReader
 from puck.stdver import stdver
@@ -24,7 +28,9 @@ class GithubVersion(AtomReader):
     ghuser: str | None = None
     ghrepo: str | None = None
 
-    def __init__(self, url: str, src_url: str = "", patt_sub: dict[str, str] = {}):
+    def __init__(
+        self, pkg_cache_dir: Path, url: str, src_url: str = "", patt_sub: dict[str, str] = {}
+    ):
         try:
             ghuser, ghrepo = src_url.split("/")[3:5]
         except Exception as e:
@@ -47,7 +53,26 @@ class GithubVersion(AtomReader):
 
         urlTemp = Template("https://github.com/${user}/${repo}/tags.atom")
         self.url = urlTemp.substitute(user=self.ghuser, repo=self.ghrepo)
-        super().__init__(self.url)
+
+        self.gh_mdata_file: Path = pkg_cache_dir / "github.json"
+        self.gh_metadata: dict = {"user": self.ghuser, "repo": self.ghrepo}
+        try:
+            with open(self.gh_mdata_file, mode="r") as f:
+                with suppress(json.JSONDecodeError):
+                    self.gh_metadata = json.load(f)
+        except FileNotFoundError as _:
+            self.gh_metadata = {
+                "user": self.ghuser,
+                "repo": self.ghrepo,
+                "feed_url": self.url,
+            }
+
+        super().__init__(self.url, self.gh_metadata.get("feed_metadata"))
+        if not self.gh_metadata.get("feed_metadata"):
+            self.gh_metadata["feed_metadata"] = {
+                "etag": self.feed_data.etag,
+                "modified": self.feed_data.get("modified", ""),
+            }
         # ghrepo ending in digits messes up version search, drop them from tag name
         # along with separator, if any
         gh_repo_end_digits = re.search(r"\d+$", self.ghrepo)
@@ -56,6 +81,9 @@ class GithubVersion(AtomReader):
         )
 
     def get_version(self):
+        if self.no_update:
+            ver = parse(self.gh_metadata.get("Version"))
+            return ver
         # Loop entries to get tag with valid version, max 5 times, otherwise give up
         for cnt in range(0, self.MAX_ENTRIES):
             tag = self.get_tag_id(cnt)
@@ -66,9 +94,15 @@ class GithubVersion(AtomReader):
                 else ver
             )
             try:
-                return parse(ver.replace("_", "."))
-            except Exception:
-                pass
+                version = parse(ver.replace("_", "."))
+                self.gh_metadata["Version"] = str(version)
+                with open(self.gh_mdata_file, mode="w") as f:
+                    json.dump(self.gh_metadata, f)
+                return version
+            except InvalidVersion as _:
+                continue
+            except Exception as e:
+                raise e
 
         raise RuntimeError(f"Unable to obtain version from last {self.MAX_ENTRIES:d} tags")
 

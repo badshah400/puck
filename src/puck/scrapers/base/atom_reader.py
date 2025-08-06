@@ -13,15 +13,26 @@ class AtomReader:
     Base class for reading package data off atom/rss feeds. Must be derived from.
     """
 
-    def __init__(self, feed_url: str):
+    def __init__(self, feed_url: str, feed_metadata: dict = {}):
+        self.no_update = False
         try:
-            self.feed_data = fp.parse(feed_url)
+            if feed_metadata:
+                self.feed_data = fp.parse(feed_url,
+                                          etag=feed_metadata.get("etag"),
+                                          modified=feed_metadata.get("modified"))
+            else:
+                self.feed_data = fp.parse(feed_url)
         except Exception as e:
             raise e
+
         if self.feed_data.status >= 308:
             raise HTTPError(f"Error accessing {feed_url} [HTTP code {self.feed_data.status}]")
-        if not len(self.feed_data.entries):
-            raise RuntimeError(f"Invalid URL or empty feed: {feed_url}")
+        if not self.feed_data.entries:
+            if self.feed_data.status == 304:
+                self.no_update = True
+            else:
+                raise RuntimeError(f"Invalid URL or empty feed: {feed_url}")
+
 
     def get_tag_id(self, tag_num: int = 0) -> str:
         try:

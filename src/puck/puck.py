@@ -4,19 +4,21 @@
 # SPDX-License-Identifier: MIT
 #
 # mypy: disable-error-code=import-untyped
-# mypy: disable-error-code=union-attr
 """puck main module"""
 
 import sys
 
 # from logging import log
 import argparse
+import os
+import json
 import time
 import re
 from pathlib import Path
 from textwrap import wrap
 from urllib.error import HTTPError
 from packaging.version import parse
+from xdg.BaseDirectory import xdg_cache_home
 
 from puck.__about__ import __version__
 
@@ -26,6 +28,8 @@ from puck.errors import Errors
 from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
 from puck.github import GithubVersion
+
+CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
 
 
 class GnuStyleHelpFormatter(argparse.HelpFormatter):
@@ -145,8 +149,24 @@ class Puck:
         #     level=((log.INFO // self.args.verbose) if self.args.verbose > 0 else log.WARN),
         # )
         self.cwd = Path.cwd()
+        self.setup_cache_dir()
 
-    def cmp_version(self):
+    def setup_cache_dir(self, dir=CACHE_DIR):
+        """Set up cache dir
+
+        :dir: Optional patch to cache dir
+        :returns: None
+
+        """
+        try:
+            os.makedirs(CACHE_DIR)
+        except FileExistsError as _:
+            pass
+        except Exception as e:
+            raise e
+            sys.exit(1)
+
+    def cmp_version(self) -> None:
         out = FormOut()
         errs = Errors()
         try:
@@ -174,8 +194,17 @@ class Puck:
             src_url = stags.SourceUrl()
             self.rpm_macros = resolve_unexp_macros(url, src_url, stags)
 
+            pkg_cache_dir: Path = CACHE_DIR / f"{prj}" / f"{pkg}"
             try:
-                G = GithubVersion(url, src_url, self.rpm_macros)
+                os.makedirs(pkg_cache_dir)
+            except FileExistsError as _:
+                pass
+            except Exception as _:
+                sys.exit(1)
+
+            pkg_obs_file = Path(pkg_cache_dir) / "obs.json"
+            try:
+                G = GithubVersion(pkg_cache_dir, url, src_url, self.rpm_macros)
             except Exception as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue
@@ -196,11 +225,22 @@ class Puck:
             }
 
             if statusmap["upsVer"] > statusmap["specVer"]:
-                rq = chkrq(prj, pkg)
-                statusmap["reqs"] = rq
+                req = chkrq(prj, pkg)
+                statusmap["reqs"] = req
                 statusmap["update"] = True
 
             out.print(idstr, statusmap)
+
+            with open(pkg_obs_file, mode="w") as f:
+                obs_pkg_info = {
+                    "Project"    : f"{prj!s}",
+                    "Package"    : f"{pkg!s}",
+                    "URL"        : f"{url!s}",
+                    "Source URL" : f"{src_url!s}",
+                    "Version"    : f'{statusmap["specVer"]!s}',
+                }
+                json.dump(obs_pkg_info, f)
+
             time.sleep(0.2)  # Avoid getting IP blocked by ddos guards
 
         errs.Print()
