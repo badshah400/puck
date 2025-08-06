@@ -27,7 +27,7 @@ classifiers = [
 dependencies = ['colorama', 'feedparser', 'lxml', 'osc', 'packaging', 'rich']
 
 [project.scripts]
-puck = "puck.puck:cmp_version"
+puck = "puck.puck:run_puck"
 
 [project.urls]
 Documentation = "https://github.com/Atri Bhattacharya/puck#readme"

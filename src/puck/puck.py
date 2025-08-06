@@ -3,11 +3,15 @@
 #
 # SPDX-License-Identifier: MIT
 #
+# mypy: disable-error-code=import-untyped
+# mypy: disable-error-code=union-attr
 """puck main module"""
 
 import sys
+
+# from logging import log
 import argparse
-import logging as log
+import time
 import re
 from pathlib import Path
 from textwrap import wrap
@@ -22,6 +26,7 @@ from puck.errors import Errors
 from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
 from puck.github import GithubVersion
+
 
 class GnuStyleHelpFormatter(argparse.HelpFormatter):
     """
@@ -69,7 +74,7 @@ class GnuStyleHelpFormatter(argparse.HelpFormatter):
         return wrap(text, width=52, break_on_hyphens=False)
 
 
-def parse_args():
+def parse_args(args):
     """Set up argparse options and parse input args accordingly"""
     parser = argparse.ArgumentParser(
         description=(
@@ -77,8 +82,45 @@ def parse_args():
             f" (version {__version__})."
         ),
         formatter_class=GnuStyleHelpFormatter,
-        usage="%(prog)s [OPTIONS] FILENAME",
+        usage="%(prog)s [OPTIONS] NAME",
     )
+
+    parser.add_argument(
+        "name",
+        metavar="FILENAME or PACKAGE",
+        type=str,
+        help="input file name or obs package id",
+    )
+
+    return parser.parse_args(args)
+
+
+def resolve_unexp_macros(url: str, src_url: str, stags: SpecTags) -> dict[str, str]:
+    """
+    Returns a dictionary of in-file macros with their values as keys
+
+    :url: The URL tag parsed from specfile (str)
+    :src_url: The Source URl parsed from specfile; may not be a full URL (str)
+    :returns: Dictionary with macro regex as key and macro value as its value (dict[str,str])
+    """
+
+    macro_resolv_dic: dict[str, str] = {}
+    UNEXP_MACRO_RE = re.compile(r"%{?\w+}?")
+
+    for s in url, src_url:
+        for matched_patt in UNEXP_MACRO_RE.findall(s, re.MULTILINE):
+            bare_macro = matched_patt.lstrip("%").strip("{}")
+            macro_line = re.search(
+                rf"^%(define|global)\s+{bare_macro}\s+.*", stags.Spec(), flags=re.MULTILINE
+            )
+            try:
+                macro_def = macro_line.group(0).split(" ")[1:]
+                macro_resolv_dic[rf"%{{?{macro_def[0]}}}?"] = "".join(macro_def[1:])
+            except AttributeError:
+                # An unresolved macro is not an error, we trust rpm build to
+                # resolve macros not explicitly defined in the specfile
+                continue
+    return macro_resolv_dic
 
 
 class Puck:
@@ -87,94 +129,83 @@ class Puck:
     appropriate action class
     """
 
+    rpm_macros: dict[str, str] = {}
+
     def __init__(self, args):
         self.args = parse_args(args)
-        log.basicConfig(
-            format="[%(levelname)s] %(message)s",
-            level=((log.INFO // self.args.verbose) if self.args.verbose > 0 else log.WARN),
-        )
+        if not self.args.name:
+            print(f"{self.args.help}")
+            sys.exit(1)
+        # log.basicConfig(
+        #     format="[%(levelname)s] %(message)s",
+        #     level=((log.INFO // self.args.verbose) if self.args.verbose > 0 else log.WARN),
+        # )
         self.cwd = Path.cwd()
 
-
-def cmp_version():
-    out = FormOut()
-    errs = Errors()
-    if len(sys.argv) == 1:
-        f = PrjPkgList.fromfile('./data/ghpkg.txt')
-    else:
-        pkgs = []
-        for a in sys.argv[1:]:
-            pkgs.append(a)
-        f = PrjPkgList(pkgs)
-
-    for prj, pkg in f.List():
-        idstr   = prj + '/' + pkg
+    def cmp_version(self):
+        out = FormOut()
+        errs = Errors()
         try:
-            stags = SpecTags(prj, pkg)
-        except RuntimeError as e:
-            errs.Append(f'{prj}/{pkg}: {e}')
-            continue
-        except CalledProcessError:
-            errs.Append(f'{prj}/{pkg}: rpmspec error while parsing specfile.')
-            continue
-        except Exception:
-            errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '
-                        'package?'.format(prj, pkg))
-            continue
-        url     = stags.Url()
-        src_url = stags.SourceUrl()
+            f = PrjPkgList.fromfile(self.args.name)
+        except Exception as _:
+            f = PrjPkgList([self.args.name])
 
-        ghuser, ghrepo = src_url.split('/')[3:5]
-        if not re.search(r'github\.com', src_url):
-            if not re.search(r'github\.com', url):
-                errs.Append(F'{prj}/{pkg}: Source does not point to github URL')
-                continue
-
-            ghuser, ghrepo = url.split('/')[3:5]
-
-        # Handle %name in ghrepo
-        ghrepo = re.sub(r'%{?name}?', pkg, ghrepo)
-
-        if ghrepo[0] == '%': # Leading % implies an rpm macro which is not %name
-            bare_macro = ghrepo.lstrip('%').strip('{}')
-            macro_line = re.search(rf'^%(define|global)\s+{bare_macro}\s+.*', stags.Spec(),
-                                   flags=re.MULTILINE)
+        for prj, pkg in f.List():
+            idstr = prj + "/" + pkg
             try:
-                macro_def = macro_line.group(0).split(' ')[2:]
-            except AttributeError:
-                errs.Append(f'{prj}/{pkg}: Error when resolving macro {ghrepo}')
+                stags = SpecTags(prj, pkg)
+            except RuntimeError as e:
+                errs.Append(f"{prj}/{pkg}: {e}")
                 continue
-            ghrepo = ''.join(macro_def)
+            except CalledProcessError:
+                errs.Append(f"{prj}/{pkg}: rpmspec error while parsing specfile.")
+                continue
+            except Exception:
+                errs.Append(
+                    "{:s}/{:s}: Failed to sparse spec file, invalid OBS package?".format(prj, pkg)
+                )
+                continue
 
-        # Handle ghrepo ending in .git
-        ghrepo = re.sub(r'.git$', '', ghrepo)
+            url = stags.Url()
+            src_url = stags.SourceUrl()
+            self.rpm_macros = resolve_unexp_macros(url, src_url, stags)
 
-        try:
-            G = GithubVersion(ghuser, ghrepo)
-        except Exception as e:
-            errs.Append(f'{prj}/{pkg}: {e}')
-            continue
-        try:
-            uver   = G.get_version()
-        except RuntimeError as e:
-            errs.Append(f'{prj}/{pkg}: {e}')
-            continue
-        except HTTPError as h:
-            errs.Append(f'{prj}/{pkg}: {h}')
-            continue
+            try:
+                G = GithubVersion(url, src_url, self.rpm_macros)
+            except Exception as e:
+                errs.Append(f"{prj}/{pkg}: {e}")
+                continue
+            try:
+                uver = G.get_version()
+            except RuntimeError as e:
+                errs.Append(f"{prj}/{pkg}: {e}")
+                continue
+            except HTTPError as h:
+                errs.Append(f"{prj}/{pkg}: {h}")
+                continue
 
-        statusmap = {'specVer' : parse(stags.Version()),
-                     'upsVer' : uver,
-                     'reqs'   : None,
-                     'update' : False
-                    }
+            statusmap = {
+                "specVer": parse(stags.Version()),
+                "upsVer": uver,
+                "reqs": None,
+                "update": False,
+            }
 
-        if statusmap['upsVer'] > statusmap['specVer']:
-            rq                  = chkrq(prj, pkg)
-            statusmap['reqs']   = rq
-            statusmap['update'] = True
+            if statusmap["upsVer"] > statusmap["specVer"]:
+                rq = chkrq(prj, pkg)
+                statusmap["reqs"] = rq
+                statusmap["update"] = True
 
-        out.print(idstr, statusmap)
+            out.print(idstr, statusmap)
+            time.sleep(0.2)  # Avoid getting IP blocked by ddos guards
 
-if __name__ == '__main__':
+        errs.Print()
+
+
+def run_puck():
+    p = Puck(sys.argv[1:])
+    p.cmp_version()
+
+
+if __name__ == "__main__":
     pass

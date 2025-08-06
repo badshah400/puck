@@ -24,7 +24,10 @@ class PrjPkgList:
     def fromfile(cls, filename):
         arr = []
 
-        f = open(filename, 'r', encoding='utf-8')
+        try:
+            f = open(filename, 'r', encoding='utf-8')
+        except FileNotFoundError as e:
+            raise e
         for line in f:
             # IGNORE COMMENTED LINES
             if line[0] == '#':
