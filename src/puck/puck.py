@@ -110,6 +110,10 @@ def resolve_unexp_macros(url: str, src_url: str, stags: SpecTags) -> dict[str, s
     for s in url, src_url:
         for matched_patt in UNEXP_MACRO_RE.findall(s, re.MULTILINE):
             bare_macro = matched_patt.lstrip("%").strip("{}")
+            # Note: This line-by-line search for macro definition works because
+            # typically macro defintions relevant to URL or Source URL tags are
+            # short and defined in a single line. If the macro definition
+            # stretches across multiple lines, this will fail.
             macro_line = re.search(
                 rf"^%(define|global)\s+{bare_macro}\s+.*", stags.Spec(), flags=re.MULTILINE
             )
