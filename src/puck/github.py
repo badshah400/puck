@@ -82,7 +82,7 @@ class GithubVersion(AtomReader):
 
     def get_version(self):
         if self.no_update:
-            ver = parse(self.gh_metadata.get("Version"))
+            ver = parse(self.gh_metadata.get("version"))
             return ver
         # Loop entries to get tag with valid version, max 5 times, otherwise give up
         for cnt in range(0, self.MAX_ENTRIES):
@@ -95,7 +95,7 @@ class GithubVersion(AtomReader):
             )
             try:
                 version = parse(ver.replace("_", "."))
-                self.gh_metadata["Version"] = str(version)
+                self.gh_metadata["version"] = str(version)
                 with open(self.gh_mdata_file, mode="w") as f:
                     json.dump(self.gh_metadata, f)
                 return version
