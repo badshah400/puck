@@ -176,8 +176,16 @@ class Puck:
 
         for prj, pkg in f.List():
             idstr = prj + "/" + pkg
+            pkg_cache_dir: Path = CACHE_DIR / f"{prj!s}" / f"{pkg!s}"
             try:
-                stags = SpecTags(prj, pkg)
+                os.makedirs(pkg_cache_dir)
+            except FileExistsError as _:
+                pass
+            except Exception as _:
+                sys.exit(1)
+
+            try:
+                stags = SpecTags(prj, pkg, pkg_cache_dir)
             except RuntimeError as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue
@@ -194,15 +202,6 @@ class Puck:
             src_url = stags.SourceUrl()
             self.rpm_macros = resolve_unexp_macros(url, src_url, stags)
 
-            pkg_cache_dir: Path = CACHE_DIR / f"{prj}" / f"{pkg}"
-            try:
-                os.makedirs(pkg_cache_dir)
-            except FileExistsError as _:
-                pass
-            except Exception as _:
-                sys.exit(1)
-
-            pkg_obs_file = Path(pkg_cache_dir) / "obs.json"
             try:
                 G = GithubVersion(pkg_cache_dir, url, src_url, self.rpm_macros)
             except Exception as e:
@@ -230,16 +229,6 @@ class Puck:
                 statusmap["update"] = True
 
             out.print(idstr, statusmap)
-
-            with open(pkg_obs_file, mode="w") as f:
-                obs_pkg_info = {
-                    "Project"    : f"{prj!s}",
-                    "Package"    : f"{pkg!s}",
-                    "URL"        : f"{url!s}",
-                    "Source URL" : f"{src_url!s}",
-                    "Version"    : f'{statusmap["specVer"]!s}',
-                }
-                json.dump(obs_pkg_info, f)
 
             time.sleep(0.2)  # Avoid getting IP blocked by ddos guards
 

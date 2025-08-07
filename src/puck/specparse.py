@@ -2,6 +2,9 @@
 # vim: set ai et ts=4 sw=4 tw=100:
 # mypy: disable-error-code=import-untyped
 
+import json
+from contextlib import suppress
+from pathlib import Path
 from os import path, mkdir
 from subprocess import run, CalledProcessError
 from tempfile import NamedTemporaryFile
@@ -26,81 +29,114 @@ class SpecTags:
     RE_VER  = re.compile('^Version:.*', flags=re.MULTILINE)
 
     API_URL = osc.conf.config['apiurl']
+    obs_metadata: dict = {}
 
-    def __init__(self, prj, pkg):
+    def __init__(self, prj: str, pkg: str, cache_dir: Path):
         self.name    = ''
         self.ver     = ''
         self.url     = ''
         self.src_url = ''
         self.spec    = ''
 
-        # Check if package is multi-build and error out early if so
-        multi = osc.core.makeurl(self.API_URL, ['source', prj, pkg, '_multibuild'],
-                                 query={'expand': 1})
         is_multi_flavoured = False
-        try:
-            osc.core.http_GET(multi)
-            is_multi_flavoured = True  # rpmspec won't work, so we have to grep manually
-        except HTTPError as e:
-            if (404 == e.getcode()):
-                # This means no _multibuild file found, so we are good to proceed with rpmspec
-                pass
-            else:
-                # Re-raise if something else has gone wrong
-                raise e
-
-        u = osc.core.makeurl(self.API_URL, ['source', prj, pkg, pkg + '.spec'],
-                             query={'expand': 1})
 
         try:
-            fi = osc.core.http_GET(u)
-            self.spec = b''.join(fi.readlines()).decode('utf-8')
+            obs_rev = osc.core.get_source_rev(self.API_URL, prj, pkg)
         except HTTPError:
             raise RuntimeError("Error fetching spec file.")
+
+        obs_mdata_cache: dict = {}
+        obs_mdata_file: Path = Path(cache_dir) / 'obs.json'
+
+        try:
+            with open(obs_mdata_file, mode="r") as elem:
+                with suppress(json.JSONDecodeError):
+                    obs_mdata_cache = json.load(elem)
+        except FileNotFoundError:
             pass
+        except Exception as e:
+            raise e
 
-        cachedir = path.join('.', '.osc')
-        if not path.exists(cachedir):
-            mkdir(cachedir)
-
-        if is_multi_flavoured:
-            self.url = self.RE_URL.search(self.spec).group().split()[-1]
-            self.ver = self.RE_VER.search(self.spec).group().split()[-1]
-            self.src_url = self.RE_SRC0.search(self.spec).group().split()[-1]
+        if obs_mdata_cache.get("revision", "-1") == obs_rev["rev"]:
+            self.url = obs_mdata_cache["url"]
+            self.src_url = obs_mdata_cache["source_url"]
+            self.ver = obs_mdata_cache["version"]
         else:
-            with NamedTemporaryFile(mode='w', suffix='.spec', dir=cachedir) as f:
-                f.write(self.spec)
-                f.flush()
-
-                RPMSPEC_BIN     = run(['which', 'rpmspec'], capture_output=True, text=True)
-                rpmspec_cmdline = f'{RPMSPEC_BIN.stdout.strip()} --srpm -q --qf "%{{url}} %{{version}}" '
-                rpmspec_cmdline += ' '.join([f'--define="{macro} %nil"' for macro in UNDEFINED_MACROS])
-                rpmspec_cmdline += f' {f.name}'
-                try:
-                    proc = run(rpmspec_cmdline, shell=True, capture_output=True, text=True, check=True)
-                    self.url, self.ver = proc.stdout.split()
-                except CalledProcessError as e:
+            multi = osc.core.makeurl(self.API_URL, ['source', prj, pkg, '_multibuild'],
+                                     query={'expand': 1})
+            # If package is multi-build, we need to avoid rpmspec
+            try:
+                osc.core.http_GET(multi)
+                is_multi_flavoured = True  # rpmspec won't work, so we have to grep manually
+            except HTTPError as e:
+                if (404 == e.getcode()):
+                    # This means no _multibuild file found, so we are good to proceed with rpmspec
+                    pass
+                else:
+                    # Re-raise if something else has gone wrong
                     raise e
 
-                try:
-                    spec_parse  = run(['/usr/bin/rpmspec', '-P', f.name],
-                                      capture_output=True, text=True, check=True)
-                    spec_exp    = spec_parse.stdout
-                    self.src_url = self.RE_SRC0.search(spec_exp).group().split()[-1]
-                except CalledProcessError:
-                    self.src_url = self.RE_SRC0.search(self.spec).group().split()[-1]
-
+            obs_spec_url = osc.core.makeurl(self.API_URL, ['source', prj, pkg, pkg + '.spec'],
+                                            query={'expand': 1})
             try:
-                # If srcURL is really a URL, then it will have at least 3 parts (http://...)
-                self.src_url.split('/')[2]
-            except IndexError:
-                # Get srcURL from _service file
-                service_file = osc.core.http_GET(u.replace(f"{pkg}.spec", "_service"))
-                service_xml  = b''.join(service_file.readlines())
-                service_root = etree.fromstring(service_xml.decode('utf-8'))
-                for f in service_root.findall(".//param[@name]"):
-                    if f.attrib["name"] == "url":
-                        self.src_url = f.text
+                fi = osc.core.http_GET(obs_spec_url, headers={'Keep-Alive': 'timeout=5'})
+                self.spec = b''.join(fi.readlines()).decode('utf-8')
+            except HTTPError:
+                raise RuntimeError("Error fetching spec file.")
+
+            if is_multi_flavoured:
+                self.url = self.RE_URL.search(self.spec).group().split()[-1]
+                self.ver = self.RE_VER.search(self.spec).group().split()[-1]
+                self.src_url = self.RE_SRC0.search(self.spec).group().split()[-1]
+            else:
+                with NamedTemporaryFile(mode='w', suffix='.spec', dir=cache_dir) as elem:
+                    elem.write(self.spec)
+                    elem.flush()
+
+                    RPMSPEC_BIN     = run(['which', 'rpmspec'], capture_output=True, text=True)
+                    rpmspec_cmdline = f'{RPMSPEC_BIN.stdout.strip()} --srpm -q --qf "%{{url}} %{{version}}" '
+                    rpmspec_cmdline += ' '.join([f'--define="{macro} %nil"' for macro in UNDEFINED_MACROS])
+                    rpmspec_cmdline += f' {elem.name}'
+                    try:
+                        proc = run(rpmspec_cmdline, shell=True, capture_output=True, text=True, check=True)
+                        self.url, self.ver = proc.stdout.split()
+                    except CalledProcessError as e:
+                        raise e
+
+                    try:
+                        spec_parse  = run(['/usr/bin/rpmspec', '-P', elem.name],
+                                          capture_output=True, text=True, check=True)
+                        spec_exp    = spec_parse.stdout
+                        self.src_url = self.RE_SRC0.search(spec_exp).group().split()[-1]
+                    except CalledProcessError:
+                        self.src_url = self.RE_SRC0.search(self.spec).group().split()[-1]
+
+                try:
+                    # If srcURL is really a URL, then it will have at least 3 parts (http://...)
+                    self.src_url.split('/')[2]
+                except IndexError:
+                    try:
+                        # Get srcURL from _service file
+                        service_file = osc.core.http_GET(obs_spec_url.replace(f"{pkg}.spec", "_service"))
+                        service_xml  = b''.join(service_file.readlines())
+                        service_root = etree.fromstring(service_xml.decode('utf-8'))
+                        for elem in service_root.findall(".//param[@name]"):
+                            if elem.attrib["name"] == "url":
+                                self.src_url = elem.text
+                    except Exception as e:
+                        raise e
+
+            self.obs_metadata = {"project": prj,
+                                 "package": pkg,
+                                 "is_multibuild": "True" if is_multi_flavoured else "False",
+                                 "url" : self.url,
+                                 "source_url" : self.src_url,
+                                 "version" : self.ver,
+                                 "revision": obs_rev.get('rev', ''),
+                                }
+
+            with open(obs_mdata_file, mode="w") as elem:
+                json.dump(self.obs_metadata, elem)
 
 
     def Name(self):
