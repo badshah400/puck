@@ -67,8 +67,8 @@ class GithubVersion(AtomReader):
                 "feed_url": self.url,
             }
 
-        super().__init__(self.url, self.gh_metadata.get("feed_metadata"))
-        if not self.gh_metadata.get("feed_metadata"):
+        super().__init__(self.url, self.gh_metadata.get("feed_metadata", {}))
+        if not self.no_update:
             self.gh_metadata["feed_metadata"] = {
                 "etag": self.feed_data.etag,
                 "modified": self.feed_data.get("modified", ""),
