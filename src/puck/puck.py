@@ -80,6 +80,7 @@ class GnuStyleHelpFormatter(argparse.HelpFormatter):
 
 def parse_args(args):
     """Set up argparse options and parse input args accordingly"""
+
     parser = argparse.ArgumentParser(
         description=(
             "Compare package version on OBS against latest upstream tag/release"
@@ -91,9 +92,28 @@ def parse_args(args):
 
     parser.add_argument(
         "name",
-        metavar="FILENAME or PACKAGE",
+        metavar="FILENAME or OBS-PACKAGE",
         type=str,
         help="input file name or obs package id",
+    )
+
+    parser.add_argument(
+        "-V",
+        "--version",
+        help="print %(prog)s version and exit",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+
+
+    ALLOWED_UPSTREAMS = ["github"]
+    parser.add_argument(
+        "-u",
+        "--upstream",
+        choices=ALLOWED_UPSTREAMS,
+        metavar="UPSTREAM",
+        help="URL for version look-up (only github for now)",
+        default=ALLOWED_UPSTREAMS[0],
     )
 
     return parser.parse_args(args)
@@ -138,6 +158,7 @@ class Puck:
     """
 
     rpm_macros: dict[str, str] = {}
+    ups_locator: str = ''
 
     def __init__(self, args):
         self.args = parse_args(args)
@@ -149,6 +170,7 @@ class Puck:
         #     level=((log.INFO // self.args.verbose) if self.args.verbose > 0 else log.WARN),
         # )
         self.cwd = Path.cwd()
+        self.ups_locator = self.args.upstream
         self.setup_cache_dir()
 
     def setup_cache_dir(self, dir=CACHE_DIR):
@@ -169,6 +191,7 @@ class Puck:
     def cmp_version(self) -> None:
         out = FormOut()
         errs = Errors()
+        UPS_FUNC = {"github": GithubVersion}
         try:
             f = PrjPkgList.fromfile(self.args.name)
         except Exception as _:
@@ -203,7 +226,7 @@ class Puck:
             self.rpm_macros = resolve_unexp_macros(url, src_url, stags)
 
             try:
-                G = GithubVersion(pkg_cache_dir, url, src_url, self.rpm_macros)
+                G = UPS_FUNC[self.args.upstream](pkg_cache_dir, url, src_url, self.rpm_macros)
             except Exception as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue
