@@ -28,6 +28,7 @@ from puck.errors import Errors
 from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
 from puck.scrapers.github import GithubVersion
+from puck.scrapers.pypi import PyPI
 
 CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
 
@@ -106,13 +107,13 @@ def parse_args(args):
     )
 
 
-    ALLOWED_UPSTREAMS = ["github"]
+    ALLOWED_UPSTREAMS = ["github", "pypi"]
     parser.add_argument(
         "-u",
         "--upstream",
         choices=ALLOWED_UPSTREAMS,
         metavar="UPSTREAM",
-        help="URL for version look-up (only github for now)",
+        help="URL for version look-up (github, pypi)",
         default=ALLOWED_UPSTREAMS[0],
     )
 
@@ -194,7 +195,7 @@ class Puck:
     def cmp_version(self) -> None:
         out = FormOut()
         errs = Errors()
-        UPS_FUNC = {"github": GithubVersion}
+        UPS_FUNC = {"github": GithubVersion, "pypi": PyPI}
         try:
             f = PrjPkgList.fromfile(self.args.name)
         except Exception as _:
@@ -229,7 +230,10 @@ class Puck:
             self.rpm_macros = resolve_unexp_macros(url, src_url, stags)
 
             try:
-                G = UPS_FUNC[self.args.upstream](pkg_cache_dir, url, src_url, self.rpm_macros)
+                if self.args.upstream == "github":
+                    G = GithubVersion(pkg_cache_dir, url, src_url, self.rpm_macros)
+                elif self.args.upstream == "pypi":
+                    G = PyPI(pkg_cache_dir, pkg)
             except Exception as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue

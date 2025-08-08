@@ -1,92 +1,63 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
 
-import sys
-import os
-from string import Template
 import re
-from os import path
-import feedparser as fp
+from pathlib import Path
 from packaging.version import Version, parse
-import osc.conf
-from specparse import SpecTags
-from pkglistparse import PrjPkgList
-from errors import Errors
-from stdver import stdver
-from chkrq import chkrq
-from output import FormOut
-from subprocess import CalledProcessError
+from puck.stdver import stdver
 
-# initialize osc configuration
-osc.conf.get_config()
-apiurl = osc.conf.config['apiurl']
+from .base.feed_reader import RssReader
+from puck.metadata import load_cache_metadata, update_cache_metadata
 
-errs = Errors()
+class PyPI(RssReader):
 
-def pypiLastVer(prj):
-    urlTemp = Template('https://pypi.org/rss/project/${proj}/releases.xml')
-    url     = urlTemp.substitute(proj=prj)
-    d       = fp.parse(url)
-    if not len(d.entries):
-        # TRY python-$prj as prjname
-        url = urlTemp.substitute(proj='python-{:s}'.format(prj))
-        d   = fp.parse(url)
-        if not len(d.entries):
-            global errs
-            errs.Append('{:s}: Invalid pypi project'.format(prj))
-            return Version('0.0.0')
+    """PyPI look-up class"""
 
-    ver = Version('0.0.0')
-    for e in d.entries:
-        last_tag = e
-        ver      = stdver(last_tag.title)
-        if not Version(ver).is_prerelease:
-            break
-    try:
-        return parse(ver)
-    except:
-        errs.Append('{:s}: unable to parse version from PyPI'.format(prj))
+    MAX_TRIES = 5
+
+    def __init__(self, pkg_cache_dir, obs_prj: str):
+        """PyPI init function
+
+        :pypi_prj: PyPI project name (str)
+        :metadata: Optional feed metadata to send to feed server (dict)
+
+        """
+        pypre   = re.compile(r'^python[2-3]?\-')
+
+        self._pypi_prj = pypre.subn('', obs_prj, 1)[0]
+        self.url       = f'https://pypi.org/rss/project/{self._pypi_prj}/releases.xml'
+        self.metadata_file: Path = pkg_cache_dir / "pypi.json"
+        # try loading metadata from cache first
+        try:
+            self.metadata = load_cache_metadata(self.metadata_file)
+        except FileNotFoundError:
+            self.metadata: dict = {
+                "upstream": "pypi",
+                "project": self._pypi_prj,
+                "feed_url": self.url
+            }
+
+        super().__init__(self.url, self.metadata)
+
+    def get_version(self):
+        ver = Version('0.0.0')
+        if self.no_update:
+            ver = self.metadata["version"]
+        else:
+            self.metadata["feed_metadata"]: dict = {}
+            self.metadata["feed_metadata"]["etag"] = self.etag
+            self.metadata["feed_metadata"]["modified"] = self.modified
+            for cnt in range(self.MAX_TRIES):
+                tag_name = self.get_tag_id(cnt)
+                ver = stdver(tag_name, self._pypi_prj)
+                if not Version(ver).is_prerelease:
+                    break
+        try:
+            self.metadata["version"] = str(ver)
+            update_cache_metadata(self.metadata_file, self.metadata)
+            return parse(ver)
+        except Exception as e:
+            raise e
 
 if __name__ == '__main__':
-    out = FormOut()
-    pypre   = re.compile(r'^python[2-3]?\-')
-    if len(sys.argv) == 1:
-        f = PrjPkgList.fromfile('pypipkg.txt')
-    else:
-        pkgs = []
-        for a in sys.argv[1:]:
-            pkgs.append(a)
-        f = PrjPkgList(pkgs)
-
-    for prj, pkg in f.List():
-        idstr   = prj + '/' + pkg
-        pypiprj  = pypre.sub('', pkg)
-        try:
-            stags   = SpecTags(prj, pkg)
-        except RuntimeError as e:
-            errs.Append(f'{prj}/{pkg}: {e}')
-            continue
-        except CalledProcessError as e:
-            errs.Append(f'{prj}/{pkg}: rpmspec error while parsing specfile.')
-            continue
-        except:
-            errs.Append('{:s}/{:s}: Failed to sparse spec file, invalid OBS '
-                        'package?'.format(prj, pkg))
-            continue
-        url     = stags.Url()
-        src_url = stags.SourceUrl()
-
-        statusmap = {'specVer' : parse(stags.Version()),
-                      'upsVer' : pypiLastVer(pypiprj),
-                      'reqs'   : None,
-                      'update' : False
-                    }
-
-        if statusmap['upsVer'] > statusmap['specVer']:
-            rq                  = chkrq(prj, pkg)
-            statusmap['reqs']   = rq
-            statusmap['update'] = True
-        
-        out.print(idstr, statusmap)
-
-errs.Print()
+    pass
