@@ -1,4 +1,4 @@
-# vim: set ai et ts=4 sw=4:
+# vim: set ai et ts=4 sw=4 tw=100:
 # SPDX-FileCopyrightText: 2025-present Atri Bhattacharya <atrib@duck.com>
 #
 # SPDX-License-Identifier: MIT
@@ -11,7 +11,6 @@ import sys
 # from logging import log
 import argparse
 import os
-import json
 import time
 import re
 from pathlib import Path

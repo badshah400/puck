@@ -5,7 +5,6 @@
 import json
 from contextlib import suppress
 from pathlib import Path
-from os import path, mkdir
 from subprocess import run, CalledProcessError
 from tempfile import NamedTemporaryFile
 import re

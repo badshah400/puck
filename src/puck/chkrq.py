@@ -1,10 +1,8 @@
 #!/usr/bin/python3
-# vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
+# vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
 
-import sys
 import osc.conf
 import osc.core
-from puck.pkglistparse import PrjPkgList
 from lxml import etree
 
 def chkrq(prj,pkg):
@@ -39,17 +37,4 @@ def chkrq(prj,pkg):
         return None
 
 if __name__ == '__main__':
-    osc.conf.get_config()
-    pkgs = []
-    if len(sys.argv) == 1:
-        pkgs = ['science/plplot']
-    else:
-        for a in sys.argv[1:]:
-            pkgs.append(a)
-
-    f = PrjPkgList(pkgs)
-
-    for prj, pkg in f.List():
-        u, msg = chkrq(prj, pkg)
-        if msg:
-            print('{:s} [{:s}]'.format(u, msg))
+    pass

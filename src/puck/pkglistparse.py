@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# vim: set ai et ts=4 sw=4 tw=80:
+# vim: set ai et ts=4 sw=4 tw=100:
 
 
 class PrjPkgList:

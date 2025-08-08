@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# vim: set ai et ts=4 sw=4 tw=80:
+# vim: set ai et ts=4 sw=4 tw=100:
 
 import sys
 

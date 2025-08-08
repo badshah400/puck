@@ -5,7 +5,6 @@
 from string import Template
 from contextlib import suppress
 import re
-import sys
 from pathlib import Path
 from packaging.version import parse, InvalidVersion
 import osc.conf
