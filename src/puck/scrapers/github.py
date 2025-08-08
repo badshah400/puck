@@ -10,7 +10,7 @@ from packaging.version import parse, InvalidVersion
 import osc.conf
 import json
 
-from puck.scrapers.base.atom_reader import AtomReader
+from .base.feed_reader import AtomReader
 from puck.stdver import stdver
 
 # initialize osc configuration
