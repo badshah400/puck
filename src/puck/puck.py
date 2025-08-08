@@ -11,6 +11,7 @@ import sys
 # from logging import log
 import argparse
 import os
+import osc.conf
 import time
 import re
 from pathlib import Path
@@ -160,6 +161,9 @@ class Puck:
     ups_locator: str = ''
 
     def __init__(self, args):
+        # initialize osc configuration
+        osc.conf.get_config()
+
         self.args = parse_args(args)
         if not self.args.name:
             print(f"{self.args.help}")

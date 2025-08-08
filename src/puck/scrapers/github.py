@@ -7,15 +7,10 @@ from contextlib import suppress
 import re
 from pathlib import Path
 from packaging.version import parse, InvalidVersion
-import osc.conf
 import json
 
 from .base.feed_reader import AtomReader
 from puck.stdver import stdver
-
-# initialize osc configuration
-osc.conf.get_config()
-apiurl = osc.conf.config["apiurl"]
 
 
 class GithubVersion(AtomReader):
