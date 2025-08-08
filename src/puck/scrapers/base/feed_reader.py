@@ -9,11 +9,12 @@ Base classes for reading package data off atom/rss feeds
 import feedparser as fp
 from urllib.error import HTTPError
 
+
 class _FeedReader:
 
     """Common class for feed readers"""
 
-    def __init__(self, feed_url: str, metadata:dict = {}):
+    def __init__(self, feed_url: str, metadata: dict):
         """Initialise _FeedReader class
 
         :feed_url: URL pointing to feed
@@ -22,33 +23,41 @@ class _FeedReader:
         """
         self.feed_url = feed_url
         self.no_update = False
-        self.metadata = metadata
-        self.etag = self.metadata.get("etag", "")
-        self.modified = self.metadata.get("modified", "")
+        self.metadata: dict = metadata
+
 
     def get_data(self) -> fp.FeedParserDict:
         """Parse and return feed data
-        :returns: feed
+        :returns: parses feed data
 
         """
+        if self.metadata.get("feed_metadata"):
+            self.etag = self.metadata["feed_metadata"].get("etag", "")
+            self.modified = self.metadata["feed_metadata"].get("modified", "")
+        else:
+            self.etag = ""
+            self.modified = ""
         try:
             feed_data = (fp.parse(self.feed_url, etag=self.etag,
-                                  modified=self.modified) if self.metadata else
+                                  modified=self.modified) if
+                         self.metadata.get("feed_metadata") else
                          fp.parse(self.feed_url))
         except Exception as e:
             raise e
 
-        # Update etag and modified stamps
-        self.etag = feed_data.get("etag", "")
-        self.modified = feed_data.get("modified", "")
-
         if feed_data.status >= 308:
             raise HTTPError(f"Error accessing {self.feed_url} [HTTP code {feed_data.status}]")
+
+        if feed_data.status == 304:
+            self.no_update = True
+            return fp.FeedParserDict()  # This returned val is never actually used
+        else:
+            self.etag = feed_data.get("etag", "")
+            self.modified = feed_data.get("modified", "")
+
         if not feed_data.entries:
-            if feed_data.status == 304:
-                self.no_update = True
-            else:
-                raise RuntimeError(f"Invalid URL or empty feed: {self.feed_url}")
+            raise RuntimeError(f"Invalid URL or empty feed: {self.feed_url}")
+
         return feed_data
 
 
@@ -57,8 +66,8 @@ class AtomReader(_FeedReader):
     Base class for reading package data off atom/rss feeds. Must be derived from.
     """
 
-    def __init__(self, feed_url: str, feed_metadata: dict = {}):
-        super().__init__(feed_url, feed_metadata)
+    def __init__(self, feed_url: str, metadata: dict):
+        super().__init__(feed_url, metadata)
         self.feed_data = self.get_data()
 
     def get_tag_id(self, tag_num: int = 0) -> str:
@@ -89,6 +98,8 @@ class RssReader(_FeedReader):
         self.feed_data = self.get_data()
 
     def get_tag_id(self, tag_num: int = 0) -> str:
+        if self.no_update:
+            return ""
         try:
             assert tag_num < len(self.feed_data.entries)
         except AssertionError:
