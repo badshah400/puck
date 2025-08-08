@@ -64,7 +64,7 @@ class GithubVersion(AtomReader):
         super().__init__(self.url, self.gh_metadata.get("feed_metadata", {}))
         if not self.no_update:
             self.gh_metadata["feed_metadata"] = {
-                "etag": self.feed_data.etag,
+                "etag": self.feed_data.get("etag", ""),
                 "modified": self.feed_data.get("modified", ""),
             }
         # ghrepo ending in digits messes up version search, drop them from tag name
