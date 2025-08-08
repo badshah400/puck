@@ -27,7 +27,7 @@ from puck.output import FormOut
 from puck.errors import Errors
 from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
-from puck.github import GithubVersion
+from puck.scrapers.github import GithubVersion
 
 CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
 
