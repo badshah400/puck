@@ -73,3 +73,29 @@ class AtomReader(_FeedReader):
         # Drop leading 'v' from tag, if any
         ver = ver.lstrip('v')
         return ver
+
+
+class RssReader(_FeedReader):
+    """Base class for reading RSS feeds; must be derived from"""
+
+    def __init__(self, feed_url: str, feed_metadata: dict = {}):
+        """Initialiser RSS_Reader class
+
+        :feed_url: URL to the RSS feed reader
+        :feed_metadata: Optional metadata to send to RSS feed server
+
+        """
+        super().__init__(feed_url, feed_metadata)
+        self.feed_data = self.get_data()
+
+    def get_tag_id(self, tag_num: int = 0) -> str:
+        try:
+            assert tag_num < len(self.feed_data.entries)
+        except AssertionError:
+            raise RuntimeError(
+                f"Invalid item number {tag_num} for feed with {self.feed_data.entries} total entries"
+            )
+
+        ver = self.feed_data.entries[tag_num].get("title", "")
+        return ver
+
