@@ -94,7 +94,10 @@ class RssReader(_FeedReader):
 
         """
         super().__init__(feed_url, feed_metadata)
-        self.feed_data = self.get_data()
+        try:
+            self.feed_data = self.get_data()
+        except RuntimeError:
+            self.feed_data = {}
 
     def get_tag_id(self, tag_num: int = 0) -> str:
         if self.no_update:
