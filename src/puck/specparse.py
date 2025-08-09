@@ -84,9 +84,9 @@ class SpecTags:
                 raise RuntimeError("Error fetching spec file.")
 
             if is_multi_flavoured:
-                self.url = self.RE_URL.search(self.spec).group().split()[-1]
-                self.ver = self.RE_VER.search(self.spec).group().split()[-1]
-                self.src_url = self.RE_SRC0.search(self.spec).group().split()[-1]
+                self.url = (self.RE_URL.search(self.spec) or re.Match()).group().split()[-1]
+                self.ver = (self.RE_VER.search(self.spec) or re.Match()).group().split()[-1]
+                self.src_url = (self.RE_SRC0.search(self.spec) or re.Match()).group().split()[-1]
             else:
                 with NamedTemporaryFile(mode='w', suffix='.spec', dir=cache_dir) as elem:
                     elem.write(self.spec)
@@ -106,9 +106,9 @@ class SpecTags:
                         spec_parse  = run(['/usr/bin/rpmspec', '-P', elem.name],
                                           capture_output=True, text=True, check=True)
                         spec_exp    = spec_parse.stdout
-                        self.src_url = self.RE_SRC0.search(spec_exp).group().split()[-1]
+                        self.src_url = (self.RE_SRC0.search(spec_exp) or re.Match()).group().split()[-1]
                     except CalledProcessError:
-                        self.src_url = self.RE_SRC0.search(self.spec).group().split()[-1]
+                        self.src_url = (self.RE_SRC0.search(self.spec) or re.Match()).group().split()[-1]
 
                 try:
                     # If srcURL is really a URL, then it will have at least 3 parts (http://...)
