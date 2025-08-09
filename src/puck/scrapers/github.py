@@ -48,6 +48,7 @@ class GithubVersion(AtomReader):
         # try loading metadata from cache first
         try:
             self.metadata = load_cache_metadata(self.metadata_file)
+            self.url = self.metadata.get("feed_url", self.url)
         except FileNotFoundError:
             self.metadata: dict = {
                 "upstream": "github",

@@ -25,7 +25,6 @@ class _FeedReader:
         self.metadata: dict = metadata
         self._valid_feed = True
 
-
     def get_data(self) -> fp.FeedParserDict:
         """Parse and return feed data
         :returns: parses feed data
@@ -45,7 +44,15 @@ class _FeedReader:
         except Exception as e:
             raise e
 
-        if feed_data.status >= 308:
+        # Handle permanent re-directs
+        if feed_data.status in [301, 308]:
+            if not feed_data.get("feed"):  # Empty feed along with 301/308 implies no need to update
+                self.no_update = True
+            self.feed_url = feed_data.get("href", self.feed_url)
+            self.metadata["feed_url"] = self.feed_url
+            return feed_data
+
+        if feed_data.status >= 400:
             self._valid_feed = False
             raise RuntimeError(f"Error accessing {self.feed_url} [HTTP code {feed_data.status}]")
 
@@ -73,11 +80,14 @@ class AtomReader(_FeedReader):
         self.feed_data = self.get_data()
 
     def get_tag_id(self, tag_num: int = 0) -> str:
+        if self.no_update:
+            return ""
         try:
-            assert tag_num < len(self.feed_data.entries)
+            assert tag_num < len(self.feed_data.get("entries", []))
         except AssertionError:
             raise RuntimeError(
-                f"Invalid item number {tag_num} for feed with {self.feed_data.entries} total entries"
+                f"Invalid item number {tag_num} for feed with"
+                f" {len(self.feed_data.get('entries', []))} total entries"
             )
         current_tag = self.feed_data.entries[tag_num]
         ver = current_tag.id.split("/")[-1]
