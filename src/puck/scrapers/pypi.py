@@ -2,6 +2,7 @@
 # vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
 
 import re
+from string import Template
 from pathlib import Path
 from packaging.version import Version, parse
 from puck.stdver import stdver
@@ -15,17 +16,18 @@ class PyPI(RssReader):
 
     MAX_TRIES = 5
 
-    def __init__(self, pkg_cache_dir, obs_prj: str):
+    def __init__(self, pkg_cache_dir: Path, obs_prj: str):
         """PyPI init function
 
-        :pypi_prj: PyPI project name (str)
-        :metadata: Optional feed metadata to send to feed server (dict)
+        :pkg_cache_dir: Cache dir (Path)
+        :obs_prj: OBS project name (str)
 
         """
         pypre   = re.compile(r'^python[2-3]?\-')
 
         self._pypi_prj = pypre.subn('', obs_prj, 1)[0]
-        self.url       = f'https://pypi.org/rss/project/{self._pypi_prj}/releases.xml'
+        url_template   = Template("https://pypi.org/rss/project/${pypi_prj}/releases.xml")
+        self.url       = url_template.substitute(pypi_prj=self._pypi_prj)
         self.metadata_file: Path = pkg_cache_dir / "pypi.json"
         # try loading metadata from cache first
         try:
@@ -38,6 +40,15 @@ class PyPI(RssReader):
             }
 
         super().__init__(self.url, self.metadata)
+        if not self.feed_data:
+            # Try pre-pending "python-" to pypi project name
+            new_url = url_template.substitute(pypi_prj=f"python-{self._pypi_prj}")
+            super().__init__(new_url, self.metadata)
+            if self.feed_data:
+                self._pypi_prj = f"python-{self._pypi_prj}"
+                self.metadata["project"] = self._pypi_prj
+                self.url = new_url
+                self.metadata["feed_url"] = self.url
 
     def get_version(self):
         ver = Version('0.0.0')
