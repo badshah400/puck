@@ -48,9 +48,9 @@ class SpecTags:
         obs_mdata_file: Path = Path(cache_dir) / 'obs.json'
 
         try:
-            with open(obs_mdata_file, mode="r") as elem:
+            with open(obs_mdata_file, mode="r") as f:
                 with suppress(json.JSONDecodeError):
-                    obs_mdata_cache = json.load(elem)
+                    obs_mdata_cache = json.load(f)
         except FileNotFoundError:
             pass
         except Exception as e:
@@ -88,14 +88,14 @@ class SpecTags:
                 self.ver = (self.RE_VER.search(self.spec) or re.Match()).group().split()[-1]
                 self.src_url = (self.RE_SRC0.search(self.spec) or re.Match()).group().split()[-1]
             else:
-                with NamedTemporaryFile(mode='w', suffix='.spec', dir=cache_dir) as elem:
-                    elem.write(self.spec)
-                    elem.flush()
+                with NamedTemporaryFile(mode='w', suffix='.spec', dir=cache_dir) as pkg_spec:
+                    pkg_spec.write(self.spec)
+                    pkg_spec.flush()
 
                     RPMSPEC_BIN     = run(['which', 'rpmspec'], capture_output=True, text=True)
                     rpmspec_cmdline = f'{RPMSPEC_BIN.stdout.strip()} --srpm -q --qf "%{{url}} %{{version}}" '
                     rpmspec_cmdline += ' '.join([f'--define="{macro} %nil"' for macro in UNDEFINED_MACROS])
-                    rpmspec_cmdline += f' {elem.name}'
+                    rpmspec_cmdline += f' {pkg_spec.name}'
                     try:
                         proc = run(rpmspec_cmdline, shell=True, capture_output=True, text=True, check=True)
                         self.url, self.ver = proc.stdout.split()
@@ -103,7 +103,7 @@ class SpecTags:
                         raise e
 
                     try:
-                        spec_parse  = run(['/usr/bin/rpmspec', '-P', elem.name],
+                        spec_parse  = run(['/usr/bin/rpmspec', '-P', pkg_spec.name],
                                           capture_output=True, text=True, check=True)
                         spec_exp    = spec_parse.stdout
                         self.src_url = (self.RE_SRC0.search(spec_exp) or re.Match()).group().split()[-1]
@@ -119,9 +119,9 @@ class SpecTags:
                         service_file = osc.core.http_GET(obs_spec_url.replace(f"{pkg}.spec", "_service"))
                         service_xml  = b''.join(service_file.readlines())
                         service_root = etree.fromstring(service_xml.decode('utf-8'))
-                        for elem in service_root.findall(".//param[@name]"):
-                            if elem.attrib["name"] == "url":
-                                self.src_url = elem.text
+                        for pkg_spec in service_root.findall(".//param[@name]"):
+                            if pkg_spec.attrib["name"] == "url":
+                                self.src_url = pkg_spec.text
                     except Exception as e:
                         raise e
 
@@ -134,8 +134,8 @@ class SpecTags:
                                  "revision": obs_rev.get('rev', ''),
                                 }
 
-            with open(obs_mdata_file, mode="w") as elem:
-                json.dump(self.obs_metadata, elem)
+            with open(obs_mdata_file, mode="w") as mfile:
+                json.dump(self.obs_metadata, mfile)
 
 
     def Name(self):
