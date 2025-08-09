@@ -10,7 +10,6 @@ import feedparser as fp
 
 
 class _FeedReader:
-
     """Common class for feed readers"""
 
     def __init__(self, feed_url: str, metadata: dict):
@@ -37,10 +36,11 @@ class _FeedReader:
             self.etag = ""
             self.modified = ""
         try:
-            feed_data = (fp.parse(self.feed_url, etag=self.etag,
-                                  modified=self.modified) if
-                         self.metadata.get("feed_metadata") else
-                         fp.parse(self.feed_url))
+            feed_data = (
+                fp.parse(self.feed_url, etag=self.etag, modified=self.modified)
+                if self.metadata.get("feed_metadata")
+                else fp.parse(self.feed_url)
+            )
         except Exception as e:
             raise e
 
@@ -95,7 +95,7 @@ class AtomReader(_FeedReader):
         current_tag = self.feed_data.entries[tag_num]
         ver = current_tag.id.split("/")[-1]
         # Drop leading 'v' from tag, if any
-        ver = ver.lstrip('v')
+        ver = ver.lstrip("v")
         return ver
 
 
@@ -128,4 +128,3 @@ class RssReader(_FeedReader):
 
         ver = self.feed_data.entries[tag_num].get("title", "")
         return ver
-

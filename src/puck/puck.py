@@ -105,7 +105,6 @@ def parse_args(args):
         version=f"%(prog)s {__version__}",
     )
 
-
     ALLOWED_UPSTREAMS = ["github", "pypi"]
     parser.add_argument(
         "-u",
@@ -125,7 +124,7 @@ class Puck:
     appropriate action class
     """
 
-    ups_locator: str = ''
+    ups_locator: str = ""
 
     def __init__(self, args):
         # initialize osc configuration
@@ -171,9 +170,9 @@ class Puck:
             pkg_cache_dir: Path = CACHE_DIR / f"{prj!s}" / f"{pkg!s}"
             try:
                 os.makedirs(pkg_cache_dir)
-            except FileExistsError as _:
+            except FileExistsError:
                 pass
-            except Exception as _:
+            except Exception:
                 sys.exit(1)
 
             try:

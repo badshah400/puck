@@ -21,8 +21,7 @@ class GithubVersion(AtomReader):
     ghuser: str | None = None
     ghrepo: str | None = None
 
-    def __init__(
-        self, pkg_cache_dir: Path, url: str, src_url: str = ""):
+    def __init__(self, pkg_cache_dir: Path, url: str, src_url: str = ""):
         try:
             ghuser, ghrepo = src_url.split("/")[3:5]
         except Exception as e:
@@ -52,7 +51,7 @@ class GithubVersion(AtomReader):
                 "upstream": "github",
                 "user": self.ghuser,
                 "repo": self.ghrepo,
-                "feed_url": self.url
+                "feed_url": self.url,
             }
 
         super().__init__(self.url, self.metadata)

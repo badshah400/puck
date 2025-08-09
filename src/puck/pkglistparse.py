@@ -7,30 +7,30 @@ class PrjPkgList:
         self.prjpkgs = []
 
         for line in pkglist:
-        # IGNORE COMMENTED LINES
-            if line[0] == '#':
+            # IGNORE COMMENTED LINES
+            if line[0] == "#":
                 continue
 
             # REPLACE SPACE BY '/' THEN SPLIT BY '/'
-            line = line.replace(' ', '/')
+            line = line.replace(" ", "/")
             # print(line)
-            line_parts = line.split('/')
+            line_parts = line.split("/")
             if len(line_parts) != 2:
                 continue
             # print(l)
-            self.prjpkgs.append((line_parts[0], line_parts[1].rstrip('\n')))
+            self.prjpkgs.append((line_parts[0], line_parts[1].rstrip("\n")))
 
     @classmethod
     def fromfile(cls, filename):
         arr = []
 
         try:
-            f = open(filename, 'r', encoding='utf-8')
+            f = open(filename, "r", encoding="utf-8")
         except FileNotFoundError as e:
             raise e
         for line in f:
             # IGNORE COMMENTED LINES
-            if line[0] == '#':
+            if line[0] == "#":
                 continue
 
             arr.append(line)
@@ -39,4 +39,3 @@ class PrjPkgList:
 
     def List(self):
         return self.prjpkgs
-

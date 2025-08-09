@@ -10,8 +10,8 @@ from puck.stdver import stdver
 from .base.feed_reader import RssReader
 from puck.metadata import load_cache_metadata, update_cache_metadata
 
-class PyPI(RssReader):
 
+class PyPI(RssReader):
     """PyPI look-up class"""
 
     MAX_TRIES = 5
@@ -23,11 +23,11 @@ class PyPI(RssReader):
         :obs_prj: OBS project name (str)
 
         """
-        pypre   = re.compile(r'^python[2-3]?\-')
+        pypre = re.compile(r"^python[2-3]?\-")
 
-        self._pypi_prj = pypre.subn('', obs_prj, 1)[0]
-        url_template   = Template("https://pypi.org/rss/project/${pypi_prj}/releases.xml")
-        self.url       = url_template.substitute(pypi_prj=self._pypi_prj)
+        self._pypi_prj = pypre.subn("", obs_prj, 1)[0]
+        url_template = Template("https://pypi.org/rss/project/${pypi_prj}/releases.xml")
+        self.url = url_template.substitute(pypi_prj=self._pypi_prj)
         self.metadata_file: Path = pkg_cache_dir / "pypi.json"
         # try loading metadata from cache first
         try:
@@ -36,7 +36,7 @@ class PyPI(RssReader):
             self.metadata: dict = {
                 "upstream": "pypi",
                 "project": self._pypi_prj,
-                "feed_url": self.url
+                "feed_url": self.url,
             }
 
         super().__init__(self.url, self.metadata)
@@ -51,7 +51,7 @@ class PyPI(RssReader):
                 self.metadata["feed_url"] = self.url
 
     def get_version(self):
-        ver = Version('0.0.0')
+        ver = Version("0.0.0")
         if not self._valid_feed:
             raise RuntimeError(f"Invalid PyPI project: {self._pypi_prj}")
         if self.no_update:
@@ -72,5 +72,6 @@ class PyPI(RssReader):
         except Exception as e:
             raise e
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     pass
