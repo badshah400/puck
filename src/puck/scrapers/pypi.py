@@ -52,6 +52,8 @@ class PyPI(RssReader):
 
     def get_version(self):
         ver = Version('0.0.0')
+        if not self._valid_feed:
+            raise RuntimeError(f"Invalid PyPI project: {self._pypi_prj}")
         if self.no_update:
             ver = self.metadata["version"]
         else:
