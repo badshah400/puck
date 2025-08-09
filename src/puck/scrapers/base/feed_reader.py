@@ -7,7 +7,6 @@ Base classes for reading package data off atom/rss feeds
 # mypy: disable-error-code=import-untyped
 
 import feedparser as fp
-from urllib.error import HTTPError
 
 
 class _FeedReader:
@@ -46,7 +45,7 @@ class _FeedReader:
             raise e
 
         if feed_data.status >= 308:
-            raise HTTPError(f"Error accessing {self.feed_url} [HTTP code {feed_data.status}]")
+            raise RuntimeError(f"Error accessing {self.feed_url} [HTTP code {feed_data.status}]")
 
         if feed_data.status == 304:
             self.no_update = True
