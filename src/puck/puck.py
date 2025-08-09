@@ -120,45 +120,12 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def resolve_unexp_macros(url: str, src_url: str, stags: SpecTags) -> dict[str, str]:
-    """
-    Returns a dictionary of in-file macros with their values as keys
-
-    :url: The URL tag parsed from specfile (str)
-    :src_url: The Source URl parsed from specfile; may not be a full URL (str)
-    :returns: Dictionary with macro regex as key and macro value as its value (dict[str,str])
-    """
-
-    macro_resolv_dic: dict[str, str] = {}
-    UNEXP_MACRO_RE = re.compile(r"%{?\w+}?")
-
-    for s in url, src_url:
-        for matched_patt in UNEXP_MACRO_RE.findall(s, re.MULTILINE):
-            bare_macro = matched_patt.lstrip("%").strip("{}")
-            # Note: This line-by-line search for macro definition works because
-            # typically macro defintions relevant to URL or Source URL tags are
-            # short and defined in a single line. If the macro definition
-            # stretches across multiple lines, this will fail.
-            macro_line = re.search(
-                rf"^%(define|global)\s+{bare_macro}\s+.*", stags.Spec(), flags=re.MULTILINE
-            )
-            try:
-                macro_def = macro_line.group(0).split(" ")[1:]
-                macro_resolv_dic[rf"%{{?{macro_def[0]}}}?"] = "".join(macro_def[1:])
-            except AttributeError:
-                # An unresolved macro is not an error, we trust rpm build to
-                # resolve macros not explicitly defined in the specfile
-                continue
-    return macro_resolv_dic
-
-
 class Puck:
     """
     The main class that simply handles user inputs and arguments and directs control to the
     appropriate action class
     """
 
-    rpm_macros: dict[str, str] = {}
     ups_locator: str = ''
 
     def __init__(self, args):
@@ -227,11 +194,10 @@ class Puck:
 
             url = stags.Url()
             src_url = stags.SourceUrl()
-            self.rpm_macros = resolve_unexp_macros(url, src_url, stags)
 
             try:
                 if self.args.upstream == "github":
-                    G = GithubVersion(pkg_cache_dir, url, src_url, self.rpm_macros)
+                    G = GithubVersion(pkg_cache_dir, url, src_url)
                 elif self.args.upstream == "pypi":
                     G = PyPI(pkg_cache_dir, pkg)
             except Exception as e:

@@ -120,6 +120,7 @@ class SpecTags:
                     except Exception as e:
                         raise e
 
+            self._resolve_unexp_macros()
             self.obs_metadata = {"project": prj,
                                  "package": pkg,
                                  "is_multibuild": "True" if is_multi_flavoured else "False",
@@ -154,3 +155,33 @@ class SpecTags:
 
     def Spec(self):
         return self.spec
+
+    def _resolve_unexp_macros(self) -> dict[str, str]:
+        """
+        Returns a dictionary of in-file macros with their values as keys
+
+        :returns: Dictionary with macro regex as key and macro value as its value (dict[str,str])
+        """
+
+        macro_resolv_dic: dict[str, str] = {r"%{?name}?": self.name}
+        UNEXP_MACRO_RE = re.compile(r"%{?\w+}?")
+
+        for s in self.url, self.src_url:
+            for matched_patt in UNEXP_MACRO_RE.findall(s, re.MULTILINE):
+                bare_macro = matched_patt.lstrip("%").strip("{}")
+                # Note: This line-by-line search for macro definition works because
+                # typically macro defintions relevant to URL or Source URL tags are
+                # short and defined in a single line. If the macro definition
+                # stretches across multiple lines, this will fail.
+                macro_line = re.search(
+                    rf"^%(define|global)\s+{bare_macro}\s+.*", self.spec, flags=re.MULTILINE
+                )
+                if macro_line:
+                    macro_def = macro_line.group(0).split(" ")[1:]
+                    macro_resolv_dic[rf"%{{?{macro_def[0]}}}?"] = "".join(macro_def[1:])
+
+        for mcro, val in macro_resolv_dic.items():
+            self.url = re.sub(mcro, val, self.url)
+            self.src_url = re.sub(mcro, val, self.src_url)
+
+        return macro_resolv_dic

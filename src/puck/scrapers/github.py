@@ -24,8 +24,7 @@ class GithubVersion(AtomReader):
     ghrepo: str | None = None
 
     def __init__(
-        self, pkg_cache_dir: Path, url: str, src_url: str = "", patt_sub: dict[str, str] = {}
-    ):
+        self, pkg_cache_dir: Path, url: str, src_url: str = ""):
         try:
             ghuser, ghrepo = src_url.split("/")[3:5]
         except Exception as e:
@@ -36,10 +35,6 @@ class GithubVersion(AtomReader):
                 raise RuntimeError("Source does not point to github URL")
 
             ghuser, ghrepo = url.split("/")[3:5]
-
-        # Handle %name in ghrepo
-        for patt in patt_sub.items():
-            ghrepo = re.sub(patt[0], patt[1], ghrepo)
 
         # Handle ghrepo ending in .git
         ghrepo = re.sub(r".git$", "", ghrepo)
