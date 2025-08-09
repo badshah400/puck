@@ -13,7 +13,6 @@ import argparse
 import os
 import osc.conf
 import time
-import re
 from pathlib import Path
 from textwrap import wrap
 from urllib.error import HTTPError
@@ -162,7 +161,6 @@ class Puck:
     def cmp_version(self) -> None:
         out = FormOut()
         errs = Errors()
-        UPS_FUNC = {"github": GithubVersion, "pypi": PyPI}
         try:
             f = PrjPkgList.fromfile(self.args.name)
         except Exception as _:

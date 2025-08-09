@@ -3,11 +3,9 @@
 # mypy: disable-error-code=import-untyped
 
 from string import Template
-from contextlib import suppress
 import re
 from pathlib import Path
 from packaging.version import parse, InvalidVersion
-import json
 
 from .base.feed_reader import AtomReader
 from puck.stdver import stdver
