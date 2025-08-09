@@ -77,7 +77,10 @@ class AtomReader(_FeedReader):
 
     def __init__(self, feed_url: str, metadata: dict):
         super().__init__(feed_url, metadata)
-        self.feed_data = self.get_data()
+        try:
+            self.feed_data = self.get_data()
+        except RuntimeError as _:
+            self.feed_data = {}
 
     def get_tag_id(self, tag_num: int = 0) -> str:
         if self.no_update:
