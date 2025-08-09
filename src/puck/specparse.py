@@ -56,7 +56,7 @@ class SpecTags:
         except Exception as e:
             raise e
 
-        if obs_mdata_cache.get("revision", "-1") == obs_rev["rev"]:
+        if int(obs_mdata_cache.get("revision", "-1")) >= int(obs_rev["rev"]):
             self.url = obs_mdata_cache["url"]
             self.src_url = obs_mdata_cache["source_url"]
             self.ver = obs_mdata_cache["version"]
