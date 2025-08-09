@@ -23,6 +23,7 @@ class _FeedReader:
         self.feed_url = feed_url
         self.no_update = False
         self.metadata: dict = metadata
+        self._valid_feed = True
 
 
     def get_data(self) -> fp.FeedParserDict:
@@ -45,6 +46,7 @@ class _FeedReader:
             raise e
 
         if feed_data.status >= 308:
+            self._valid_feed = False
             raise RuntimeError(f"Error accessing {self.feed_url} [HTTP code {feed_data.status}]")
 
         if feed_data.status == 304:
@@ -55,6 +57,7 @@ class _FeedReader:
             self.modified = feed_data.get("modified", "")
 
         if not feed_data.entries:
+            self._valid_feed = False
             raise RuntimeError(f"Invalid URL or empty feed: {self.feed_url}")
 
         return feed_data
@@ -96,17 +99,18 @@ class RssReader(_FeedReader):
         super().__init__(feed_url, feed_metadata)
         try:
             self.feed_data = self.get_data()
-        except RuntimeError:
+        except RuntimeError as _:
             self.feed_data = {}
 
     def get_tag_id(self, tag_num: int = 0) -> str:
         if self.no_update:
             return ""
         try:
-            assert tag_num < len(self.feed_data.entries)
+            assert tag_num < len(self.feed_data.get("entries", []))
         except AssertionError:
             raise RuntimeError(
-                f"Invalid item number {tag_num} for feed with {self.feed_data.entries} total entries"
+                f"Invalid item number {tag_num} for feed with"
+                f" {len(self.feed_data.get('entries', []))} total entries"
             )
 
         ver = self.feed_data.entries[tag_num].get("title", "")

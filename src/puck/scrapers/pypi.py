@@ -40,11 +40,11 @@ class PyPI(RssReader):
             }
 
         super().__init__(self.url, self.metadata)
-        if not self.feed_data:
+        if not self._valid_feed:
             # Try pre-pending "python-" to pypi project name
             new_url = url_template.substitute(pypi_prj=f"python-{self._pypi_prj}")
             super().__init__(new_url, self.metadata)
-            if self.feed_data:
+            if self._valid_feed:
                 self._pypi_prj = f"python-{self._pypi_prj}"
                 self.metadata["project"] = self._pypi_prj
                 self.url = new_url
