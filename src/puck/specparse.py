@@ -84,9 +84,7 @@ class SpecTags:
                 raise RuntimeError("Error fetching spec file.")
 
             if is_multi_flavoured:
-                self.url = (self.RE_URL.search(self.spec) or re.Match()).group().split()[-1]
-                self.ver = (self.RE_VER.search(self.spec) or re.Match()).group().split()[-1]
-                self.src_url = (self.RE_SRC0.search(self.spec) or re.Match()).group().split()[-1]
+                self._grep_spec_for_tags()
             else:
                 with NamedTemporaryFile(mode='w', suffix='.spec', dir=cache_dir) as pkg_spec:
                     pkg_spec.write(self.spec)
@@ -99,16 +97,13 @@ class SpecTags:
                     try:
                         proc = run(rpmspec_cmdline, shell=True, capture_output=True, text=True, check=True)
                         self.url, self.ver = proc.stdout.split()
-                    except CalledProcessError as e:
-                        raise e
-
-                    try:
                         spec_parse  = run(['/usr/bin/rpmspec', '-P', pkg_spec.name],
                                           capture_output=True, text=True, check=True)
                         spec_exp    = spec_parse.stdout
                         self.src_url = (self.RE_SRC0.search(spec_exp) or re.Match()).group().split()[-1]
                     except CalledProcessError:
-                        self.src_url = (self.RE_SRC0.search(self.spec) or re.Match()).group().split()[-1]
+                        # At this stage, it is clear that rpmspec is not working for this specfile
+                        self._grep_spec_for_tags()
 
                 try:
                     # If srcURL is really a URL, then it will have at least 3 parts (http://...)
@@ -137,6 +132,13 @@ class SpecTags:
             with open(obs_mdata_file, mode="w") as mfile:
                 json.dump(self.obs_metadata, mfile)
 
+
+    def _grep_spec_for_tags(self):
+        """Function to set class data by grep-ing for rpm tags when rpmspec fails"""
+
+        self.url = (self.RE_URL.search(self.spec) or re.Match()).group().split()[-1]
+        self.ver = (self.RE_VER.search(self.spec) or re.Match()).group().split()[-1]
+        self.src_url = (self.RE_SRC0.search(self.spec) or re.Match()).group().split()[-1]
 
     def Name(self):
         return self.name
