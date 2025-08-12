@@ -50,6 +50,11 @@ class GitlabVersion(AtomReader):
             }
 
         super().__init__(self.feed_url, self.metadata)
+        if not self.feed_data.get("entries"):
+            # Try URL instead of source URL
+            self._set_prj_repo_from_url(url)
+            super().__init__(self.feed_url, self.metadata)
+
 
     def _set_prj_repo_from_url(self, url):
         url_tokens = url.split("/")
