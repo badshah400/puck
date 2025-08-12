@@ -40,7 +40,7 @@ class GitlabVersion(AtomReader):
         # try loading metadata from cache first
         try:
             self.metadata = load_cache_metadata(self.metadata_file)
-            self.url = self.metadata.get("feed_url", self.feed_url)
+            self.feed_url = self.metadata.get("feed_url", self.feed_url)
         except FileNotFoundError:
             self.metadata: dict = {
                 "upstream": "gitlab",
@@ -50,10 +50,13 @@ class GitlabVersion(AtomReader):
             }
 
         super().__init__(self.feed_url, self.metadata)
-        if not self.feed_data.get("entries"):
-            # Try URL instead of source URL
+        if not (self.feed_data.get("entries") or self.no_update):
             self._set_prj_repo_from_url(url)
             super().__init__(self.feed_url, self.metadata)
+            if self.feed_data.get("entries"):
+                self.metadata["user"] = self._prj_name
+                self.metadata["repo"] = self._repo_name
+                self.metadata["feed_url"] = self.feed_url
 
 
     def _set_prj_repo_from_url(self, url):
@@ -66,6 +69,7 @@ class GitlabVersion(AtomReader):
     def get_version(self):
         if self.no_update:
             ver = parse(self.metadata.get("version"))
+            update_cache_metadata(self.metadata_file, self.metadata)
             return ver
         # Loop entries to get tag with valid version, max 5 times, otherwise give up
         for cnt in range(0, self.MAX_ENTRIES):
