@@ -116,6 +116,20 @@ def parse_args(args):
         default=ALLOWED_UPSTREAMS[0],
     )
 
+    parser.add_argument(
+        "--url",
+        metavar="UPSTREAM_URL",
+        help="URL to upstream project",
+        default=""
+    )
+
+    parser.add_argument(
+        "--srcurl",
+        metavar="SOURCE_URL",
+        help="URL to upstream source tarball",
+        default=""
+    )
+
     return parser.parse_args(args)
 
 
@@ -190,8 +204,8 @@ class Puck:
                 )
                 continue
 
-            url = stags.Url()
-            src_url = stags.SourceUrl()
+            url = self.args.url or stags.Url()
+            src_url = self.args.srcurl or stags.SourceUrl()
 
             try:
                 if self.args.upstream == "github":
