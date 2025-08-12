@@ -112,7 +112,7 @@ def parse_args(args):
         "--upstream",
         choices=ALLOWED_UPSTREAMS,
         metavar="UPSTREAM",
-        help="URL for version look-up (github, pypi)",
+        help=f"URL for version look-up ({', '.join(ALLOWED_UPSTREAMS)})",
         default=ALLOWED_UPSTREAMS[0],
     )
 

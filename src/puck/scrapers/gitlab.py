@@ -34,8 +34,7 @@ class GitlabVersion(AtomReader):
         self.metadata_file: Path = pkg_cache_dir / "gitlab.json"
         self._src_url = src_url
         if self._src_url.split("/")[0] != "https:":
-            # This means the src_url is just the file name, e.g. when using a
-            # _service file
+            # This means the src_url is just the file name
             self._src_url = url + f"/-/archive/%{{version}}/{src_url}"
 
         # try loading metadata from cache first
