@@ -35,6 +35,7 @@ class PyPI(RssReader):
         except FileNotFoundError:
             self.metadata: dict = {
                 "upstream": "pypi",
+                "hostname": "https://pypi.org",
                 "project": self._pypi_prj,
                 "feed_url": self.url,
             }

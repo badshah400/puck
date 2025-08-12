@@ -49,6 +49,7 @@ class GithubVersion(AtomReader):
         except FileNotFoundError:
             self.metadata: dict = {
                 "upstream": "github",
+                "hostname": "https://github.com",
                 "user": self.ghuser,
                 "repo": self.ghrepo,
                 "feed_url": self.url,

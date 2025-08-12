@@ -44,6 +44,7 @@ class GitlabVersion(AtomReader):
         except FileNotFoundError:
             self.metadata: dict = {
                 "upstream": "gitlab",
+                "hostname": self._gitlab_host,
                 "user": self._prj_name,
                 "repo": self._repo_name,
                 "feed_url": self.feed_url,
@@ -54,6 +55,7 @@ class GitlabVersion(AtomReader):
             self._set_prj_repo_from_url(url)
             super().__init__(self.feed_url, self.metadata)
             if self.feed_data.get("entries"):
+                self.metadata["hostname"] = self._gitlab_host
                 self.metadata["user"] = self._prj_name
                 self.metadata["repo"] = self._repo_name
                 self.metadata["feed_url"] = self.feed_url
@@ -61,9 +63,9 @@ class GitlabVersion(AtomReader):
 
     def _set_prj_repo_from_url(self, url):
         url_tokens = url.split("/")
-        self._gitlab_url = "/".join(url_tokens[:3])
+        self._gitlab_host = "/".join(url_tokens[:3])
         self._prj_name, self._repo_name = url_tokens[3:5]
-        self.feed_url = (f"{self._gitlab_url}/"
+        self.feed_url = (f"{self._gitlab_host}/"
                          f"{self._prj_name}/{self._repo_name}/-/tags?format=atom")
 
     def get_version(self):
