@@ -27,6 +27,7 @@ from puck.errors import Errors
 from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
 from puck.scrapers.github import GithubVersion
+from puck.scrapers.gitlab import GitlabVersion
 from puck.scrapers.pypi import PyPI
 
 CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
@@ -105,7 +106,7 @@ def parse_args(args):
         version=f"%(prog)s {__version__}",
     )
 
-    ALLOWED_UPSTREAMS = ["github", "pypi"]
+    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab"]
     parser.add_argument(
         "-u",
         "--upstream",
@@ -197,6 +198,8 @@ class Puck:
                     G = GithubVersion(pkg_cache_dir, url, src_url)
                 elif self.args.upstream == "pypi":
                     G = PyPI(pkg_cache_dir, pkg)
+                elif self.args.upstream == "gitlab":
+                    G = GitlabVersion(pkg_cache_dir, url, src_url)
             except Exception as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue
