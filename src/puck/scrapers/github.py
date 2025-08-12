@@ -34,7 +34,7 @@ class GithubVersion(AtomReader):
             ghuser, ghrepo = url.split("/")[3:5]
 
         # Handle ghrepo ending in .git
-        ghrepo = re.sub(r".git$", "", ghrepo)
+        ghrepo = re.sub(r"\.git$", "", ghrepo)
         self.ghuser = ghuser
         self.ghrepo = ghrepo
 
