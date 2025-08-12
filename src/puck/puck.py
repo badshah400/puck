@@ -112,6 +112,7 @@ def parse_args(args):
         "--upstream",
         choices=ALLOWED_UPSTREAMS,
         metavar="UPSTREAM",
+        type=str,
         help=f"URL for version look-up ({', '.join(ALLOWED_UPSTREAMS)})",
         default=ALLOWED_UPSTREAMS[0],
     )
@@ -120,6 +121,7 @@ def parse_args(args):
         "--url",
         metavar="UPSTREAM_URL",
         help="URL to upstream project",
+        type=str,
         default=""
     )
 
@@ -127,6 +129,7 @@ def parse_args(args):
         "--srcurl",
         metavar="SOURCE_URL",
         help="URL to upstream source tarball",
+        type=str,
         default=""
     )
 
