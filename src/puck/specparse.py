@@ -123,14 +123,11 @@ class SpecTags:
                 except IndexError:
                     try:
                         # Get srcURL from _service file
-                        service_file = osc.core.http_GET(
-                            obs_spec_url.replace(f"{pkg}.spec", "_service")
+                        service = osc.core.makeurl(
+                            self.API_URL, ["source", prj, pkg, "_service"], query={"expand": 1}
                         )
-                        service_xml = b"".join(service_file.readlines())
-                        service_root = etree.fromstring(service_xml.decode("utf-8"))
-                        for pkg_spec in service_root.findall(".//param[@name]"):
-                            if pkg_spec.attrib["name"] == "url":
-                                self.src_url = pkg_spec.text
+                        service_xml = osc.core.http_GET(service)
+                        self.src_url = _get_src_url_from_service(service_xml)
                     except Exception as e:
                         raise e
 
@@ -199,3 +196,22 @@ class SpecTags:
             self.src_url = re.sub(mcro, val, self.src_url)
 
         return macro_resolv_dic
+
+
+def _get_src_url_from_service(srv_xml):
+
+    """Get source url by looking up <url> tag in _service file
+
+    :srv_xml: xml data from obs pkg's _service file
+    :returns: url corresponding to upstream git (str)
+
+    """
+    src_url = ""
+    service_xml = b"".join(srv_xml.readlines())
+    service_root = etree.fromstring(service_xml.decode("utf-8"))
+    for pkg_spec in service_root.findall(".//param[@name]"):
+        if pkg_spec.attrib["name"] == "url":
+            src_url = re.sub("\.git$", "", pkg_spec.text)
+            return src_url
+    if not src_url:
+        raise RuntimeError("Failed to find url tag in _service file")
