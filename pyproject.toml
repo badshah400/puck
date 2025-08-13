@@ -7,7 +7,7 @@ name = "puck"
 dynamic = ["version"]
 description = "A command-line utility to compare package versions on OBS against upstream"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = ["packaging", "openSUSE", "Build Service", "osc"]
 authors = [
@@ -16,10 +16,10 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
@@ -53,7 +53,7 @@ omit = [
 ]
 
 [[tool.hatch.envs.all.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python = ["3.10", "3.11", "3.12", "3.13"]
 
 [tool.coverage.paths]
 puck = ["src/puck", "*/puck/src/puck"]
