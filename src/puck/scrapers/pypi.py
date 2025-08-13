@@ -2,6 +2,7 @@
 # vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
 
 import re
+from json import JSONDecodeError
 from string import Template
 from pathlib import Path
 from packaging.version import Version, parse
@@ -23,9 +24,7 @@ class PyPIVersion(RssReader):
         :obs_prj: OBS project name (str)
 
         """
-        self.url: str
         pypre = re.compile(r"^python[2-3]?\-")
-
         src_url_tokens = src_url.split("/")
 
         if url:
@@ -47,16 +46,16 @@ class PyPIVersion(RssReader):
 
             if p := self.metadata.get("project"):
                 self._pypi_prj = p
-        except FileNotFoundError:
+        except (FileNotFoundError, JSONDecodeError):
             self.metadata: dict = {
                 "upstream": "pypi",
                 "hostname": "https://pypi.org",
                 "project": self._pypi_prj,
-                "feed_url": self.url,
             }
 
         url_template = Template("https://pypi.org/rss/project/${pypi_prj}/releases.xml")
         self.url = url_template.substitute(pypi_prj=self._pypi_prj)
+        self.metadata["feed_url"] = self.url
 
         super().__init__(self.url, self.metadata)
 
