@@ -28,7 +28,7 @@ from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
 from puck.scrapers.github import GithubVersion
 from puck.scrapers.gitlab import GitlabVersion
-from puck.scrapers.pypi import PyPI
+from puck.scrapers.pypi import PyPIVersion
 
 CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
 
@@ -211,10 +211,11 @@ class Puck:
             src_url = self.args.srcurl or stags.SourceUrl()
 
             try:
+                G : GithubVersion | GitlabVersion | PyPIVersion
                 if self.args.upstream == "github":
                     G = GithubVersion(pkg_cache_dir, url, src_url)
                 elif self.args.upstream == "pypi":
-                    G = PyPI(pkg_cache_dir, pkg)
+                    G = PyPIVersion(pkg_cache_dir, src_url, pkg, self.args.url)
                 elif self.args.upstream == "gitlab":
                     G = GitlabVersion(pkg_cache_dir, url, src_url)
             except Exception as e:
