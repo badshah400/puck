@@ -107,7 +107,7 @@ def parse_args(args):
         version=f"%(prog)s {__version__}",
     )
 
-    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab", "sourceforge"]
+    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab", "sourceforge", "sf"]
     parser.add_argument(
         "-u",
         "--upstream",
