@@ -29,6 +29,7 @@ from puck.chkrq import chkrq
 from puck.scrapers.github import GithubVersion
 from puck.scrapers.gitlab import GitlabVersion
 from puck.scrapers.pypi import PyPIVersion
+from puck.scrapers.sf import SFVersion
 
 CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
 
@@ -106,7 +107,7 @@ def parse_args(args):
         version=f"%(prog)s {__version__}",
     )
 
-    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab"]
+    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab", "sourceforge"]
     parser.add_argument(
         "-u",
         "--upstream",
@@ -211,13 +212,15 @@ class Puck:
             src_url = self.args.srcurl or stags.SourceUrl()
 
             try:
-                G : GithubVersion | GitlabVersion | PyPIVersion
+                G : GithubVersion | GitlabVersion | PyPIVersion | SFVersion
                 if self.args.upstream == "github":
                     G = GithubVersion(pkg_cache_dir, url, src_url)
                 elif self.args.upstream == "pypi":
                     G = PyPIVersion(pkg_cache_dir, src_url, pkg, self.args.url)
                 elif self.args.upstream == "gitlab":
                     G = GitlabVersion(pkg_cache_dir, url, src_url)
+                elif self.args.upstream in ["sourceforge", "sf"]:
+                    G = SFVersion(pkg_cache_dir, url, src_url)
             except Exception as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue

@@ -1,94 +1,32 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
 
-import sys
-from os import path
+from pathlib import Path
 import re
+from packaging.version import parse
 import requests
-from packaging.version import Version, parse
-import osc.conf
-from specparse import SpecTags
-from pkglistparse import PrjPkgList
-from errors import Errors
-from stdver import stdver
-from chkrq import chkrq
-from output import FormOut
 
-# initialize osc configuration
-osc.conf.get_config()
-apiurl = osc.conf.config["apiurl"]
-
-errs = Errors()
+from puck.stdver import stdver
 
 
-def sfLastVer(sfproj, srcf, oldver):
-    """Get last published version on SourceForge"""
+class SFVersion:
 
-    srcf = srcf.replace("+", r"\+")
-    headers = {
-        "Accept": "*/*",
-        "User-Agent": "curl/8.14.1",
-        "cache-control": "no-cache",
-        "Connection": "keep-alive",
-    }
-    sf_data = requests.get(
-        f"https://sourceforge.net/projects/{sfproj}/best_release.json",
-        headers=headers,
-        timeout=30,
-        allow_redirects=False,
-    )
-    if sf_data.status_code == requests.codes["ok"]:
-        sf_json = sf_data.json()
-    else:
-        errs.Append(f"{pkg!s}/{prj!s}: Unable to obtain sourceforge data.")
-        sf_data.raise_for_status()
-        return stdver("0.0.0")
+    """Class for checking upstream version from sourceforge"""
 
-    vertemp = r"[0-9]+" + r"(\.?[0-9]){0,6}" + r"([aA]lpha.*)?([Bb]eta.*)?"
-    anyver = re.compile(f"[^a-zA-Z]{vertemp}")
-    srcf = srcf.replace(oldver, vertemp)
-    sf_fname, _ = path.splitext(sf_json["release"]["filename"])
-    ver = anyver.search(sf_fname).group()[1:]
+    def __init__(self, pkg_cache_dir: Path, url: str, src_url: str):
+        """Init class for SFVersion
 
-    # Hack for scintilla
-    if sfproj == "scintilla":
-        ver = ver.replace(".", "")
-    return stdver(ver.replace("_", "."))
+        :pkg_cache_dir: cache dir (Path)
+        :url: URL tag extracted from specfile (str)
+        :src_url: Source URL extracted from specfile (str)
 
+        """
 
-if __name__ == "__main__":
-    sf_dlurl_re1 = re.compile(r"^downloads?\.(sourceforge|sf)\.net$")
-    sf_dlurl_re2 = re.compile(r"^(sourceforge|sf)\.net$")
-    sf_prjurl_re1 = re.compile(r"(sourceforge|sf)\.net/projects/?")
-    sf_prjurl_re2 = re.compile(r"\.(sourceforge|sf)\.(net|io)/?")
-    url_http = re.compile(r"^https?:")
-
-    if len(sys.argv) == 1:
-        f = PrjPkgList.fromfile("sfpkg.txt")
-    else:
-        pkgs = []
-        for a in sys.argv[1:]:
-            pkgs.append(a)
-        f = PrjPkgList(pkgs)
-
-    out = FormOut()
-    for prj, pkg in f.List():
-        idstr = prj + "/" + pkg
-        try:
-            stags = SpecTags(prj, pkg)
-        except RuntimeError as e:
-            errs.Append(f"{prj}/{pkg}: {e}")
-            continue
-        except CalledProcessError as e:
-            errs.Append(f"{prj}/{pkg}: rpmspec error while parsing specfile.")
-            continue
-        except:
-            errs.Append(
-                "{:s}/{:s}: Failed to sparse spec file, invalid OBS package?".format(prj, pkg)
-            )
-            continue
-        url = stags.Url()
-        src_url = stags.SourceUrl()
+        sf_dlurl_re1 = re.compile(r"^downloads?\.(sourceforge|sf)\.net$")
+        sf_dlurl_re2 = re.compile(r"^(sourceforge|sf)\.net$")
+        sf_prjurl_re1 = re.compile(r"(sourceforge|sf)\.net/projects/?")
+        sf_prjurl_re2 = re.compile(r"\.(sourceforge|sf)\.(net|io)/?")
+        url_http = re.compile(r"^https?:")
 
         # If src_url is not a URL (e.g. using a service file, etc.)
         if not url_http.match(src_url):
@@ -96,59 +34,70 @@ if __name__ == "__main__":
         else:
             src_parts = src_url.split("/")[2:]  # Drop the leading 'http://'
 
-        src_file = src_parts[-1]
-        specVer = parse(stags.Version())
-
-        sfprj = ""
+        self.sfproj = ""
 
         # Figure out SF project name
         if sf_dlurl_re1.match(src_parts[0]):
             # This works when the srcURL is of the form:
             # http://downloads.sourceforge.net/<sfprj>/<src_file>
             # or http://downloads.sourceforge.net/project/<sfprj>/<src_file>
-            sfprj = src_parts[2] if src_parts[1] == "project" else src_parts[1]
-
+            self.sfproj = src_parts[2] if src_parts[1] == "project" else src_parts[1]
         elif sf_dlurl_re2.match(src_parts[0]):
             # This works when the srcURL is of the form:
-            # http://sourceforge.net/projects/mikmod/files/...
-            sfprj = src_parts[2]
+            # http://sourceforge.net/projects/<sfproj>/files/...
+            self.sfproj = src_parts[2]
+        elif sf_prjurl_re1.search(url):
+            # http://sourceforge.net/projects/<sfproj>/
+            self.sfproj = url.split("/")[4]
+        elif sf_prjurl_re2.search(url):
+            # If the srcURL does not point to a dowload(s).s*f*.net then we look at the spec file's
+            # URL, and split the sfprj from http://<sfprj>.sourceforge.net/
+            self.sfproj = url.split("/")[2]
+            self.sfproj = self.sfproj.split(".")[0]
 
-        elif sf_prjurl_re1.search(stags.Url()):
-            # http://sourceforge.net/projects/mathmod/
-            sfprj = stags.Url().split("/")[4]
+        if not self.sfproj:
+            raise RuntimeError(r"Source does not point to sourceforge URL.")
 
-        elif sf_prjurl_re2.search(stags.Url()):
-            # If the srcURL does not point to a dowload(s).s*f*.net
-            # then we look at the spec file's URL, and split the sfprj from
-            # http://<sfprj>.sourceforge.net/
-            sfprj = url.split("/")[2]
-            sfprj = sfprj.split(".")[0]
+        self._pkg_cache_dir = pkg_cache_dir
+        self._url = url
+        self._src_url = src_url
+        headers = {
+            "Accept": "*/*",
+            "User-Agent": "curl/8.14.1",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+        }
+        self.data = requests.get(
+            f"https://sourceforge.net/projects/{self.sfproj}/best_release.json",
+            headers=headers,
+            timeout=30,
+            allow_redirects=False,
+        )
 
-        if not sfprj:
-            errs.Append(r"{:s}/{:s}: Source does not point to sourceforge URL".format(prj, pkg))
-            continue
+        if self.data.status_code == requests.codes["ok"]:
+            self.json = self.data.json()
+        else:
+            self.data.raise_for_status()
 
-        specVer = parse(stags.Version())
-        # Hack for scintilla which drops the dots from tarball versions:
-        # version 5.1.0 -> scintilla510.tgz; use no-dots-version
-        if sfprj == "scintilla":
-            specVerstr = specVer.public.replace(".", "")
-            specVer = Version(specVerstr)
+    def get_version(self):
+        """Get version from decoded json data
+        :returns: version as a packaging.version object
 
-        uver = sfLastVer(sfprj, src_file, specVer.public)
-        try:
-            parse(uver)
-        except:
-            errs.Append(r"{:s}/{:s}: Invalid package versiion {:s}".format(prj, pkg, uver))
-            continue
+        """
+        vertemp = r"[0-9]+" + r"(\.?[0-9]){0,6}" + r"([aA]lpha.*)?([Bb]eta.*)?"
+        anyver = re.compile(f"[^a-zA-Z]{vertemp}")
+        tarball_path = Path(self.json["release"]["filename"])
 
-        statusmap = {"specVer": specVer, "upsVer": parse(uver), "reqs": None, "update": False}
+        if self.sfproj == "scintilla":
+            # Hack for scintilla which drops the version sep '.' from the tarball name itself, but
+            # has the correct version in the "parent dir". E.g.: "/SciTE/5.5.7/wscite557.tgz".
+            ver = tarball_path.parts[-2]
+        else:
+            if mat := anyver.search(f"{tarball_path.stem}"):
+                ver = mat.group()[1:]
 
-        if statusmap["upsVer"] > statusmap["specVer"]:
-            rq = chkrq(prj, pkg)
-            statusmap["reqs"] = rq
-            statusmap["update"] = True
+        return parse(stdver(ver.replace("_", "."), self.sfproj))
 
-        out.print(idstr, statusmap)
 
-errs.Print()
+if __name__ == "__main__":
+    pass
