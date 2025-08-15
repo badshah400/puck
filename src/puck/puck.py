@@ -8,7 +8,6 @@
 
 import sys
 
-# from logging import log
 import argparse
 import os
 import osc.conf
@@ -16,11 +15,9 @@ import time
 from pathlib import Path
 from textwrap import wrap
 from urllib.error import HTTPError
-from packaging.version import parse
+from packaging.version import parse, InvalidVersion
 from xdg.BaseDirectory import xdg_cache_home
-
 from puck.__about__ import __version__
-
 from puck.pkglistparse import PrjPkgList
 from puck.output import FormOut
 from puck.errors import Errors
@@ -28,8 +25,14 @@ from puck.specparse import CalledProcessError, SpecTags
 from puck.chkrq import chkrq
 from puck.scrapers.github import GithubVersion
 from puck.scrapers.gitlab import GitlabVersion
+from puck.scrapers.hepforge import HepForgeVersion
 from puck.scrapers.pypi import PyPIVersion
 from puck.scrapers.sf import SFVersion
+
+
+# from logging import log
+
+
 
 CACHE_DIR = Path(xdg_cache_home).joinpath("puck")
 
@@ -107,7 +110,7 @@ def parse_args(args):
         version=f"%(prog)s {__version__}",
     )
 
-    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab", "sourceforge", "sf"]
+    ALLOWED_UPSTREAMS = ["github", "pypi", "gitlab", "hepforge", "sourceforge", "sf"]
     parser.add_argument(
         "-u",
         "--upstream",
@@ -212,13 +215,15 @@ class Puck:
             src_url = self.args.srcurl or stags.SourceUrl()
 
             try:
-                G : GithubVersion | GitlabVersion | PyPIVersion | SFVersion
+                G : GithubVersion | GitlabVersion | HepForgeVersion | PyPIVersion | SFVersion
                 if self.args.upstream == "github":
                     G = GithubVersion(pkg_cache_dir, url, src_url)
-                elif self.args.upstream == "pypi":
-                    G = PyPIVersion(pkg_cache_dir, src_url, pkg, self.args.url)
                 elif self.args.upstream == "gitlab":
                     G = GitlabVersion(pkg_cache_dir, url, src_url)
+                elif self.args.upstream == "hepforge":
+                    G = HepForgeVersion(pkg_cache_dir, url, src_url)
+                elif self.args.upstream == "pypi":
+                    G = PyPIVersion(pkg_cache_dir, src_url, pkg, self.args.url)
                 elif self.args.upstream in ["sourceforge", "sf"]:
                     G = SFVersion(pkg_cache_dir, url, src_url)
             except Exception as e:
@@ -226,11 +231,8 @@ class Puck:
                 continue
             try:
                 uver = G.get_version()
-            except RuntimeError as e:
+            except (HTTPError, InvalidVersion, RuntimeError) as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
-                continue
-            except HTTPError as h:
-                errs.Append(f"{prj}/{pkg}: {h}")
                 continue
 
             statusmap = {

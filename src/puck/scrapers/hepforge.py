@@ -1,129 +1,90 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
+# mypy: disable-error-code=import-untyped
 
-import sys
-import os
 from pathlib import Path
-import urllib.request
+import requests
 import re
-from lxml import etree  # import ElementTree as ET
-import osc.conf
-from specparse import SpecTags
-from packaging.version import Version, parse, InvalidVersion
-from errors import Errors
-from chkrq import chkrq
-from pkglistparse import PrjPkgList
-from output import FormOut
-
-# initialize osc configuration
-osc.conf.get_config()
-apiurl = osc.conf.config["apiurl"]
-
-errs = Errors()
+from lxml import etree
+from packaging.version import parse, InvalidVersion
 
 
-def hepVer(prj, pkgext=None):
-    exts = [".bz2", ".gz", ".tar", ".tgz", ".xz", ".7z", ".zip", ".rar"]
-    response = urllib.request.urlopen("https://www.hepforge.org/downloads/" + prj).read()
-    html = response.decode("utf-8")
-    strongs = etree.HTML(html).findall('.//*[@class="name"]/a')[0].text
-    # print(strongs)
-    try:
-        if not strongs:
-            raise Exception("Not listed on hepforge downloads page")
-    except:
-        return "-"
+class HepForgeVersion:
+    """Class for checking latest versions from HepForge"""
 
-    nametag = re.compile("^[a-zA-Z_.-]+")
-    ver = nametag.sub("", strongs)
-    while Path(ver).suffix in exts:
-        ver = ver.rsplit(".", 1)[0]
-        # print(ver)
+    def __init__(self, pkg_cache_dir: Path, url: str, src_url: str):
+        """Init function for HepForgeVersion class
 
-    return Version(ver.strip())
+        :pkg_cache_dir: cache dir for puck packages (Path)
+        :url: url extracted from specfile (str)
+        :src_url: source url extracted from specfile (str)
+
+        """
+
+        self._url = url
+        self._src_url = src_url
+
+        if re.search(r"hepforge\.org", self._url):
+            re_http = re.compile("^https?://")
+            self.proj_name = re_http.sub("", self._url).split(".")[0]
+
+            # Handle URL's in the form: http://projects.hepforge.org/pyfeyn/
+            if self.proj_name == "projects":
+                self.proj_name = re_http.sub("", self._url).rstrip("/").split("/")[-1]
+
+        elif re.search(r"hepforge\.org", self._src_url):
+            self.proj_name = self._src_url.split("/")[4]
+        else:
+            raise RuntimeError(r"Source does not point to hepforge URL")
+
+        self.proj_url = f"https://{self.proj_name}.hepforge.org/downloads"
+        headers = {
+            "Accept": "text/html",
+            "User-Agent": "curl/8.14.1",
+            "cache-control": "no-cache",
+            "Connection": "keep-alive",
+            "Content-Type": "text/html; charset=utf-8",
+        }
+        self.data = requests.get(
+            self.proj_url,
+            headers=headers,
+            timeout=30,
+            allow_redirects=False,
+        )
+
+        self.text_in_name_node: str = ""
+
+        if self.data.status_code != requests.codes["ok"]:
+            self.data.raise_for_status()
+
+    def get_version(self):
+        """Get version from list of downloads for source tarball
+
+        :returns: version as packaging.version object
+
+        """
+        allowed_src_exts = [".7z", ".bz2", ".gz", ".rar", ".tar", ".tgz", ".xz", ".zip", "zst"]
+        tar_prefix = re.compile("^[a-zA-Z_.-]+")
+        html_name_nodes = etree.HTML(self.data.text).findall('.//*[@class="name"]/a')
+        MAX_TRIES: int = 5
+        ver: str = ""
+        try:
+            for i in range(MAX_TRIES):
+                text_in_name_node = html_name_nodes[i].text
+                if Path(text_in_name_node).suffix in allowed_src_exts:
+                    ver = tar_prefix.sub("", text_in_name_node)
+                    while Path(ver).suffix in allowed_src_exts:
+                        ver = ver.rsplit(".", 1)[0].strip()
+                    break
+            else:
+                raise RuntimeError("Not listed on hepforge downloads page")
+        except IndexError:
+            raise RuntimeError(f"Unable to find list of downloads at {self.proj_url}.")
+        try:
+            return parse(ver)
+        except InvalidVersion as e:
+            raise e
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        f = PrjPkgList.fromfile("hfpkg.txt")
-    else:
-        pkgs = []
-        for a in sys.argv[1:]:
-            pkgs.append(a)
-        f = PrjPkgList(pkgs)
-
-    out = FormOut()
-    for prj, pkg in f.List():
-        # Whole other URL for Pythia
-        if pkg == "pythia":
-            continue
-        sp = SpecTags(prj, pkg)
-        url = sp.Url()
-        srcURL = sp.SourceUrl()
-        #        print(url)
-        #        print(srcURL)
-        if re.search(r"hepforge\.org", url):
-            re_http = re.compile("^https?://")
-            hepprj = re_http.sub("", url).split(".")[0]
-
-            # Handle URL's in the form: http://projects.hepforge.org/pyfeyn/
-            if hepprj == "projects":
-                hepprj = re_http.sub("", url).rstrip("/").split("/")[-1]
-
-        elif re.search(r"hepforge\.org", srcURL):
-            hepprj = srcURL.split("/")[4]
-        else:
-            errs.Append(r"{:s}/{:s}: Source does not point to hepforge URL".format(prj, pkg))
-            continue
-
-        specVer = Version(sp.Version())
-        #        print(specver)
-
-        try:
-            hepver = hepVer(hepprj)
-        except InvalidVersion:
-            errs.Append("Could not parse version for {:s}/{:s}".format(prj, pkg))
-            continue
-
-        statusmap = {"specVer": specVer, "upsVer": hepver, "reqs": None, "update": False}
-
-        try:
-            if hepver > specVer:
-                rq = chkrq(prj, pkg)
-                statusmap["reqs"] = rq
-                statusmap["update"] = True
-        except:
-            newer = b""
-            errs.Append(r"{:s}/{:s}: Invalid version from hepforge".format(prj, pkg))
-
-        out.print("{}/{}".format(prj, pkg), statusmap)
-
-### PYTHIA CHECK ###
-pythia_url = "https://pythia.org/history/"
-response = urllib.request.urlopen(pythia_url)
-html = response.read().decode("utf-8")
-htmldivs = etree.HTML(html).findall('.//div[@class="main"]')
-li_all = htmldivs[0].findall('.//p[@id="collapsible"]')
-li0_text = li_all[0].text
-
-pythia_ver, rel_date = li0_text.split(":")
-rel_date = rel_date.strip()
-prj = "science"
-pkg = "pythia"
-sp = SpecTags(prj, pkg)
-specVer = Version(sp.Version())
-pythiaVer = parse(pythia_ver)
-statusmap = {"specVer": specVer, "upsVer": pythiaVer, "reqs": None, "update": False}
-
-try:
-    if hepver > specVer:
-        rq = chkrq(prj, pkg)
-        statusmap["reqs"] = rq
-        statusmap["update"] = True
-except:
-    errs.Append(r"{:s}/{:s}: Invalid version from Pythia webpage".format(prj, pkg))
-
-out = FormOut()
-out.print("{}/{}".format(prj, pkg), statusmap)
-
-errs.Print()
+    pass
