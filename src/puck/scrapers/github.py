@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
-# mypy: disable-error-code=import-untyped
 
 from string import Template
 import re

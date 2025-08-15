@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# mypy: disable-error-code=import-untyped
 """puck main module"""
 
 import sys

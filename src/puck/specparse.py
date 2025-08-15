@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # vim: set ai et ts=4 sw=4 tw=100:
-# mypy: disable-error-code=import-untyped
 
 import json
 from contextlib import suppress
