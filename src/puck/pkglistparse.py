@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 # vim: set ai et ts=4 sw=4 tw=100:
 
+import re
+
 
 class PrjPkgList:
-    def __init__(self, pkglist):
+    def __init__(self, pkglist: list[str]):
         self.prjpkgs = []
 
         for line in pkglist:
@@ -12,13 +14,14 @@ class PrjPkgList:
                 continue
 
             # REPLACE SPACE BY '/' THEN SPLIT BY '/'
-            line = line.replace(" ", "/")
+            line = re.sub(r"\s+", "/", line)
             # print(line)
             line_parts = line.split("/")
-            if len(line_parts) != 2:
+            if len(line_parts) < 2:
                 continue
             # print(l)
-            self.prjpkgs.append((line_parts[0], line_parts[1].rstrip("\n")))
+            self.prjpkgs.append((line_parts[0], line_parts[1].rstrip(),
+                                 '/'.join(line_parts[2:]) if len(line_parts) > 2 else "-"))
 
     @classmethod
     def fromfile(cls, filename):

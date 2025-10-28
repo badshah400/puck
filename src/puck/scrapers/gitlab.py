@@ -28,7 +28,7 @@ class GitlabVersion(AtomReader):
         try:
             # If Source URL does not work, try url
             self._set_prj_repo_from_url(src_url)
-        except Exception as _:
+        except (IndexError, TypeError):
             self._set_prj_repo_from_url(url)
         self.metadata_file: Path = pkg_cache_dir / "gitlab.json"
         self._src_url = src_url
@@ -62,8 +62,11 @@ class GitlabVersion(AtomReader):
 
     def _set_prj_repo_from_url(self, url):
         url_tokens = url.split("/")
+        if url_tokens[-1].endswith((".tar", ".gz", ".xz", ".bz2", ".zst", ".zip")):
+            _ = url_tokens.pop()
         self._gitlab_host = "/".join(url_tokens[:3])
-        self._prj_name, self._repo_name = url_tokens[3:5]
+        self._prj_name = url_tokens[3]
+        self._repo_name = "/".join(url_tokens[4:]).rstrip("#")
         self.feed_url = (f"{self._gitlab_host}/"
                          f"{self._prj_name}/{self._repo_name}/-/tags?format=atom")
 
@@ -84,7 +87,7 @@ class GitlabVersion(AtomReader):
                 self.metadata["version"] = str(version)
                 update_cache_metadata(self.metadata_file, self.metadata)
                 return version
-            except InvalidVersion as _:
+            except InvalidVersion:
                 continue
             except Exception as e:
                 raise e

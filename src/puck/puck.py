@@ -183,10 +183,12 @@ class Puck:
         errs = Errors()
         try:
             f = PrjPkgList.fromfile(self.args.name)
-        except Exception as _:
+        except FileNotFoundError:
             f = PrjPkgList([self.args.name])
 
-        for prj, pkg in f.List():
+        for prj, pkg, m_url in f.List():
+            if m_url != "-":
+                self.args.url = m_url
             idstr = prj + "/" + pkg
             pkg_cache_dir: Path = CACHE_DIR / f"{prj!s}" / f"{pkg!s}"
             try:
