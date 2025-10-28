@@ -25,7 +25,7 @@ class SpecTags:
     RE_VER = re.compile("^Version:.*", flags=re.MULTILINE)
 
     API_URL = osc.conf.config["apiurl"]
-    obs_metadata: dict = {}
+    obs_metadata: dict[str,str] = {}
 
     def __init__(self, prj: str, pkg: str, cache_dir: Path):
         self.name = ""
@@ -63,7 +63,7 @@ class SpecTags:
             )
             # If package is multi-build, we need to avoid rpmspec
             try:
-                osc.core.http_GET(multi)
+                osc.core.http_GET(multi, headers={"Keep-Alive": "timeout=30"})
                 is_multi_flavoured = True  # rpmspec won't work, so we have to grep manually
             except HTTPError as e:
                 if 404 == e.getcode():
@@ -77,7 +77,7 @@ class SpecTags:
                 self.API_URL, ["source", prj, pkg, pkg + ".spec"], query={"expand": 1}
             )
             try:
-                fi = osc.core.http_GET(obs_spec_url, headers={"Keep-Alive": "timeout=5"})
+                fi = osc.core.http_GET(obs_spec_url, headers={"Keep-Alive": "timeout=30"})
                 self.spec = b"".join(fi.readlines()).decode("utf-8")
             except HTTPError:
                 raise RuntimeError("Error fetching spec file.")
