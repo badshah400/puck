@@ -2,7 +2,6 @@ Application:Geo/insighttoolkit
 devel:languages:python:numeric/python-folium
 devel:languages:python/python-limnoria
 devel:languages:python/python-wptools
-devel:languages:python/torbrowser-launcher
 devel:libraries:c_c++/argparse
 devel:libraries:c_c++/blitz
 devel:libraries:c_c++/CastXML
