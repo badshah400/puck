@@ -232,12 +232,13 @@ class Puck:
                 continue
             try:
                 uver = G.get_version()
+                spec_version = parse(stags.Version())
             except (HTTPError, InvalidVersion, RuntimeError) as e:
                 errs.Append(f"{prj}/{pkg}: {e}")
                 continue
 
             statusmap = {
-                "specVer": parse(stags.Version()),
+                "specVer": spec_version,
                 "upsVer": uver,
                 "reqs": None,
                 "update": False,
