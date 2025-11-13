@@ -10,7 +10,7 @@ from contextlib import suppress
 
 
 def load_cache_metadata(filename: Path | str) -> dict:
-    """Save feed metadata as json file"""
+    """Load feed metadata from json file"""
     metadata: dict = {}
     try:
         with open(filename, mode="r") as f:
