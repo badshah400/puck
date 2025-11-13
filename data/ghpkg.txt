@@ -1,5 +1,7 @@
 Application:Geo/insighttoolkit
 devel:languages:python:numeric/python-folium
+devel:languages:python:numeric/python-gvar
+devel:languages:python:numeric/python-vegas
 devel:languages:python/python-limnoria
 devel:languages:python/python-wptools
 devel:libraries:c_c++/argparse
@@ -22,6 +24,7 @@ Education/wxMaxima
 Education/xaos
 GNOME:Apps/mousam
 GNOME:Apps/wike
+GNOME:Factory/python-gobject-stubs
 graphics/curtail
 graphics/libmypaint
 graphics/mypaint
@@ -36,6 +39,7 @@ network/davix
 network/onioncat
 network/nextcloud-desktop
 network/warpinator
+Publishing/discount
 Publishing/gummi
 Publishing/Setzer
 Publishing/texworks
