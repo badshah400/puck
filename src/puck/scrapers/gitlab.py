@@ -31,17 +31,17 @@ class GitlabVersion(AtomReader):
         except (IndexError, TypeError):
             self._set_prj_repo_from_url(url)
         self.metadata_file: Path = pkg_cache_dir / "gitlab.json"
-        self._src_url = src_url
+        self._src_url: str = src_url
         if self._src_url.split("/")[0] != "https:":
             # This means the src_url is just the file name
             self._src_url = url + f"/-/archive/%{{version}}/{src_url}"
 
         # try loading metadata from cache first
         try:
-            self.metadata = load_cache_metadata(self.metadata_file)
-            self.feed_url = self.metadata.get("feed_url", self.feed_url)
+            self.metadata: dict = load_cache_metadata(self.metadata_file)
+            self.feed_url: str = self.metadata.get("feed_url", self.feed_url)
         except FileNotFoundError:
-            self.metadata: dict = {
+            self.metadata = {
                 "upstream": "gitlab",
                 "hostname": self._gitlab_host,
                 "user": self._prj_name,
@@ -60,15 +60,19 @@ class GitlabVersion(AtomReader):
                 self.metadata["feed_url"] = self.feed_url
 
 
-    def _set_prj_repo_from_url(self, url):
-        url_tokens = url.split("/")
-        if url_tokens[-1].endswith((".tar", ".gz", ".xz", ".bz2", ".zst", ".zip")):
+    def _set_prj_repo_from_url(self, url: str):
+        url_tokens: list[str] = url.split("/")
+        if url_tokens[-1].endswith(
+                (".tar", ".gz", ".xz", ".bz2", ".zst", ".zip")
+        ):
             _ = url_tokens.pop()
-        self._gitlab_host = "/".join(url_tokens[:3])
-        self._prj_name = url_tokens[3]
-        self._repo_name = "/".join(url_tokens[4:]).rstrip("#")
-        self.feed_url = (f"{self._gitlab_host}/"
-                         f"{self._prj_name}/{self._repo_name}/-/tags?format=atom")
+        self._gitlab_host: str = "/".join(url_tokens[:3])
+        self._prj_name: str = url_tokens[3]
+        self._repo_name: str = "/".join(url_tokens[4:]).rstrip("#")
+        self.feed_url = (
+            f"{self._gitlab_host}/{self._prj_name}/{self._repo_name}"
+            "/-/tags?format=atom"
+        )
 
     def get_version(self):
         if self.no_update:

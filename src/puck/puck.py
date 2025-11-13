@@ -216,7 +216,11 @@ class Puck:
             src_url = self.args.srcurl or stags.SourceUrl()
 
             try:
-                G : GithubVersion | GitlabVersion | HepForgeVersion | PyPIVersion | SFVersion
+                G : (GithubVersion
+                     | GitlabVersion
+                     | HepForgeVersion
+                     | PyPIVersion
+                     | SFVersion)
                 if self.args.upstream == "github":
                     G = GithubVersion(pkg_cache_dir, url, src_url)
                 elif self.args.upstream == "gitlab":

@@ -5,7 +5,7 @@ from pathlib import Path
 import requests
 import re
 from lxml import etree
-from packaging.version import parse, InvalidVersion
+from packaging.version import parse, InvalidVersion, Version
 
 
 class HepForgeVersion:
@@ -20,31 +20,33 @@ class HepForgeVersion:
 
         """
 
-        self._url = url
-        self._src_url = src_url
+        self._url: str = url
+        self._src_url: str = src_url
 
         if re.search(r"hepforge\.org", self._url):
-            re_http = re.compile("^https?://")
-            self.proj_name = re_http.sub("", self._url).split(".")[0]
+            re_http: re.Pattern[str] = re.compile("^https?://")
+            self.proj_name: str = re_http.sub("", self._url).split(".")[0]
 
             # Handle URL's in the form: http://projects.hepforge.org/pyfeyn/
             if self.proj_name == "projects":
-                self.proj_name = re_http.sub("", self._url).rstrip("/").split("/")[-1]
+                self.proj_name = re_http.sub(
+                    "", self._url
+                ).rstrip("/").split("/")[-1]
 
         elif re.search(r"hepforge\.org", self._src_url):
             self.proj_name = self._src_url.split("/")[4]
         else:
             raise RuntimeError(r"Source does not point to hepforge URL")
 
-        self.proj_url = f"https://{self.proj_name}.hepforge.org/downloads"
-        headers = {
+        self.proj_url: str = f"https://{self.proj_name}.hepforge.org/downloads"
+        headers: dict[str,str] = {
             "Accept": "text/html",
             "User-Agent": "curl/8.14.1",
             "cache-control": "no-cache",
             "Connection": "keep-alive",
             "Content-Type": "text/html; charset=utf-8",
         }
-        self.data = requests.get(
+        self.data: requests.Response = requests.get(
             self.proj_url,
             headers=headers,
             timeout=30,
@@ -56,7 +58,7 @@ class HepForgeVersion:
         if self.data.status_code != requests.codes["ok"]:
             self.data.raise_for_status()
 
-    def get_version(self):
+    def get_version(self) -> Version:
         """Get version from list of downloads for source tarball
 
         :returns: version as packaging.version object

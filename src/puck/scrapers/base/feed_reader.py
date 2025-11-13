@@ -19,10 +19,10 @@ class _FeedReader:
         :metadata: Optional metadata to send to feed server
 
         """
-        self.feed_url = feed_url
-        self.no_update = False
+        self.feed_url: str = feed_url
+        self.no_update: bool = False
         self.metadata: dict = metadata
-        self._valid_feed = True
+        self._valid_feed: bool = True
 
     def get_data(self) -> fp.FeedParserDict:
         """Parse and return feed data
@@ -30,8 +30,10 @@ class _FeedReader:
 
         """
         if self.metadata.get("feed_metadata"):
-            self.etag = self.metadata["feed_metadata"].get("etag", "")
-            self.modified = self.metadata["feed_metadata"].get("modified", "")
+            self.etag: str = self.metadata["feed_metadata"].get("etag", "")
+            self.modified: str = (
+                self.metadata["feed_metadata"].get("modified", "")
+            )
         else:
             self.etag = ""
             self.modified = ""

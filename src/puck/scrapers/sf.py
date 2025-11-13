@@ -3,7 +3,7 @@
 
 from pathlib import Path
 import re
-from packaging.version import parse
+from packaging.version import Version, parse
 import requests
 
 from puck.stdver import stdver
@@ -26,15 +26,15 @@ class SFVersion:
         sf_dlurl_re2 = re.compile(r"^(sourceforge|sf)\.net$")
         sf_prjurl_re1 = re.compile(r"(sourceforge|sf)\.net/projects/?")
         sf_prjurl_re2 = re.compile(r"\.(sourceforge|sf)\.(net|io)/?")
-        url_http = re.compile(r"^https?:")
+        url_http: re.Pattern[str] = re.compile(r"^https?:")
 
         # If src_url is not a URL (e.g. using a service file, etc.)
         if not url_http.match(src_url):
-            src_parts = [src_url]
+            src_parts: list[str] = [src_url]
         else:
             src_parts = src_url.split("/")[2:]  # Drop the leading 'http://'
 
-        self.sfproj = ""
+        self.sfproj: str = ""
 
         # Figure out SF project name
         if sf_dlurl_re1.match(src_parts[0]):
@@ -58,16 +58,16 @@ class SFVersion:
         if not self.sfproj:
             raise RuntimeError(r"Source does not point to sourceforge URL.")
 
-        self._pkg_cache_dir = pkg_cache_dir
-        self._url = url
-        self._src_url = src_url
-        headers = {
+        self._pkg_cache_dir: Path = pkg_cache_dir
+        self._url: str = url
+        self._src_url: str = src_url
+        headers: dict[str, str] = {
             "Accept": "*/*",
             "User-Agent": "curl/8.14.1",
             "cache-control": "no-cache",
             "Connection": "keep-alive",
         }
-        self.data = requests.get(
+        self.data: requests.Response = requests.get(
             f"https://sourceforge.net/projects/{self.sfproj}/best_release.json",
             headers=headers,
             timeout=30,
@@ -79,7 +79,7 @@ class SFVersion:
         else:
             self.data.raise_for_status()
 
-    def get_version(self):
+    def get_version(self) -> Version:
         """Get version from decoded json data
         :returns: version as a packaging.version object
 
