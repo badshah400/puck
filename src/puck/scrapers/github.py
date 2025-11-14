@@ -73,7 +73,7 @@ class GithubVersion(AtomReader, UpstreamVersion):
         )
 
         if self.no_update:
-            self.version = parse(self.metadata.get("version") or "0.0.0")
+            self.version = self.metadata.get("version", "0.0.0")
             return
 
         # Loop over feed entries to get tag with valid version, max 5 times,
@@ -87,13 +87,13 @@ class GithubVersion(AtomReader, UpstreamVersion):
                 else ver
             )
             try:
-                version: Version = parse(ver.replace("_", "."))
+                ver = ver.replace("_", ".")
                 self.metadata["feed_metadata"] = {}
                 self.metadata["feed_metadata"]["etag"] = self.etag
                 self.metadata["feed_metadata"]["modified"] = self.modified
-                self.metadata["version"] = str(version)
+                self.metadata["version"] = ver
                 update_cache_metadata(self.metadata_file, self.metadata)
-                self.version = version
+                self.version = ver
                 return
             except InvalidVersion:
                 continue

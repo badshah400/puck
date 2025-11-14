@@ -78,7 +78,7 @@ class HepForgeVersion(UpstreamVersion):
         except IndexError:
             raise RuntimeError(f"Unable to find list of downloads at {self.proj_url}.")
         try:
-            self.version = parse(ver)
+            self.version = ver
         except InvalidVersion as e:
             raise e
 

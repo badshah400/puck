@@ -88,7 +88,7 @@ class SFVersion(UpstreamVersion):
             if mat := anyver.search(f"{tarball_path.stem}"):
                 ver = mat.group()[1:]
 
-        self.version = parse(stdver(ver.replace("_", "."), self.sfproj))
+        self.version = stdver(ver.replace("_", "."), self.sfproj)
 
     def get_version(self) -> Version:
         """Return latest version from upstream"""

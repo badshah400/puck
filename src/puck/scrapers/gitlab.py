@@ -66,7 +66,7 @@ class GitlabVersion(AtomReader, UpstreamVersion):
         if self.no_update:
             ver = self.metadata.get("version", "0.0.0")
             update_cache_metadata(self.metadata_file, self.metadata)
-            self.version = parse(ver)
+            self.version = ver
             return
 
         # Loop over feed entries to get tag with valid version, max 5 times,
@@ -75,13 +75,13 @@ class GitlabVersion(AtomReader, UpstreamVersion):
             tag = self.get_tag_id(cnt)
             ver = stdver(tag, self._repo_name)
             try:
-                version = parse(ver.replace("_", "."))
+                ver = ver.replace("_", ".")
                 self.metadata["feed_metadata"] = {}
                 self.metadata["feed_metadata"]["etag"] = self.etag
                 self.metadata["feed_metadata"]["modified"] = self.modified
-                self.metadata["version"] = str(version)
+                self.metadata["version"] = ver
                 update_cache_metadata(self.metadata_file, self.metadata)
-                self.version = version
+                self.version = ver
             except InvalidVersion:
                 continue
             except Exception as e:

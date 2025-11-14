@@ -4,6 +4,7 @@
 
 from packaging.version import Version
 from typing import Optional
+from packaging.version import InvalidVersion, parse
 
 class UpstreamVersion:
 
@@ -27,5 +28,8 @@ class UpstreamVersion:
         return self._version
 
     @version.setter
-    def version(self, value: Version):
-        self._version = value
+    def version(self, value: str):
+        try:
+            self._version = parse(value)
+        except InvalidVersion as e:
+            raise e
