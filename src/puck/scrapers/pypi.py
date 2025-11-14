@@ -10,20 +10,24 @@ from puck.stdver import stdver
 
 from .base.feed_reader import RssReader
 from puck.metadata import load_cache_metadata, update_cache_metadata
+from .baseversion import UpstreamVersion
 
 
-class PyPIVersion(RssReader):
+class PyPIVersion(RssReader, UpstreamVersion):
     """PyPI look-up class"""
 
     MAX_TRIES = 5
 
-    def __init__(self, pkg_cache_dir: Path, src_url: str, obs_prj: str, url: str = ""):
+    def __init__(
+        self, pkg_cache_dir: Path, src_url: str, obs_prj: str, url: str = ""
+    ):
         """PyPI init function
 
         :pkg_cache_dir: Cache dir (Path)
         :obs_prj: OBS project name (str)
 
         """
+        super(UpstreamVersion, self).__init__()
         pypre = re.compile(r"^python[2-3]?\-")
         src_url_tokens = src_url.split("/")
 
@@ -35,8 +39,10 @@ class PyPIVersion(RssReader):
                 if src_url_tokens[2].find("pythonhosted.org") > 1:
                     self._pypi_prj = src_url_tokens[6]
                 else:
-                    raise RuntimeError("Unable to set pypi prj name from source url")
-            except Exception as _:
+                    raise RuntimeError(
+                        "Unable to set pypi prj name from source url"
+                    )
+            except Exception:
                 self._pypi_prj = pypre.subn("", obs_prj, 1)[0]
 
         self.metadata_file: Path = pkg_cache_dir / "pypi.json"
@@ -53,7 +59,9 @@ class PyPIVersion(RssReader):
                 "project": self._pypi_prj,
             }
 
-        url_template = Template("https://pypi.org/rss/project/${pypi_prj}/releases.xml")
+        url_template = Template(
+            "https://pypi.org/rss/project/${pypi_prj}/releases.xml"
+        )
         self.url = url_template.substitute(pypi_prj=self._pypi_prj)
         self.metadata["feed_url"] = self.url
 
@@ -61,7 +69,9 @@ class PyPIVersion(RssReader):
 
         if not self._valid_feed:
             # Try pre-pending "python-" to pypi project name
-            new_url = url_template.substitute(pypi_prj=f"python-{self._pypi_prj}")
+            new_url = url_template.substitute(
+                pypi_prj=f"python-{self._pypi_prj}"
+            )
             super().__init__(new_url, self.metadata)
 
             if self._valid_feed:
@@ -70,8 +80,7 @@ class PyPIVersion(RssReader):
                 self.url = new_url
                 self.metadata["feed_url"] = self.url
 
-    def get_version(self):
-        ver = Version("0.0.0")
+        ver: str = "0.0.0"
 
         if not self._valid_feed:
             raise RuntimeError(f"Invalid PyPI project: {self._pypi_prj}")
@@ -79,7 +88,7 @@ class PyPIVersion(RssReader):
         if self.no_update:
             ver = self.metadata["version"]
         else:
-            self.metadata["feed_metadata"]: dict = {}
+            self.metadata["feed_metadata"] = {}
             self.metadata["feed_metadata"]["etag"] = self.etag
             self.metadata["feed_metadata"]["modified"] = self.modified
 
@@ -90,12 +99,14 @@ class PyPIVersion(RssReader):
                 if not Version(ver).is_prerelease:
                     break
         try:
-            self.metadata["version"] = str(ver)
+            self.metadata["version"] = ver
             update_cache_metadata(self.metadata_file, self.metadata)
-
-            return parse(ver)
+            self.version = ver
         except Exception as e:
             raise e
+
+    def get_version(self) -> Version:
+        return self.version or parse("0.0.0")
 
 
 if __name__ == "__main__":
