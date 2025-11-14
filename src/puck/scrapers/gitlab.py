@@ -3,17 +3,19 @@
 
 import re
 from pathlib import Path
-from packaging.version import parse, InvalidVersion
+from packaging.version import parse, InvalidVersion, Version
 
 # Local modules
 from .base.feed_reader import AtomReader
 from puck.metadata import load_cache_metadata, update_cache_metadata
 from puck.stdver import stdver
 
+from .baseversion import UpstreamVersion
+
 # Match any non-digits that come before a version string
 NON_VERSION_PREFIX = re.compile(r"^[^0-9]*")
 
-class GitlabVersion(AtomReader):
+class GitlabVersion(AtomReader, UpstreamVersion):
 
     """Gitlab parser derived from AtomReader"""
 
@@ -25,6 +27,8 @@ class GitlabVersion(AtomReader):
         :url: Full gitlab repo URL (e.g. https://gitlab.gnome.org/GNOME/pan) (str)
 
         """
+
+        super(UpstreamVersion, self).__init__()
         try:
             # If Source URL does not work, try url
             self._set_prj_repo_from_url(src_url)
@@ -59,6 +63,33 @@ class GitlabVersion(AtomReader):
                 self.metadata["repo"] = self._repo_name
                 self.metadata["feed_url"] = self.feed_url
 
+        if self.no_update:
+            ver = self.metadata.get("version", "0.0.0")
+            update_cache_metadata(self.metadata_file, self.metadata)
+            self.version = parse(ver)
+            return
+
+        # Loop over feed entries to get tag with valid version, max 5 times,
+        # otherwise give up
+        for cnt in range(0, self.MAX_ENTRIES):
+            tag = self.get_tag_id(cnt)
+            ver = stdver(tag, self._repo_name)
+            try:
+                version = parse(ver.replace("_", "."))
+                self.metadata["feed_metadata"] = {}
+                self.metadata["feed_metadata"]["etag"] = self.etag
+                self.metadata["feed_metadata"]["modified"] = self.modified
+                self.metadata["version"] = str(version)
+                update_cache_metadata(self.metadata_file, self.metadata)
+                self.version = version
+            except InvalidVersion:
+                continue
+            except Exception as e:
+                raise e
+
+        raise RuntimeError(
+            f"Unable to obtain version from last {self.MAX_ENTRIES:d} tags"
+        )
 
     def _set_prj_repo_from_url(self, url: str):
         url_tokens: list[str] = url.split("/")
@@ -74,29 +105,8 @@ class GitlabVersion(AtomReader):
             "/-/tags?format=atom"
         )
 
-    def get_version(self):
-        if self.no_update:
-            ver = parse(self.metadata.get("version"))
-            update_cache_metadata(self.metadata_file, self.metadata)
-            return ver
-        # Loop entries to get tag with valid version, max 5 times, otherwise give up
-        for cnt in range(0, self.MAX_ENTRIES):
-            tag = self.get_tag_id(cnt)
-            ver = stdver(tag, self._repo_name)
-            try:
-                version = parse(ver.replace("_", "."))
-                self.metadata["feed_metadata"]: dict = {}
-                self.metadata["feed_metadata"]["etag"] = self.etag
-                self.metadata["feed_metadata"]["modified"] = self.modified
-                self.metadata["version"] = str(version)
-                update_cache_metadata(self.metadata_file, self.metadata)
-                return version
-            except InvalidVersion:
-                continue
-            except Exception as e:
-                raise e
-
-        raise RuntimeError(f"Unable to obtain version from last {self.MAX_ENTRIES:d} tags")
+    def get_version(self) -> Version:
+        return self.version or parse("0.0.0")
 
 
 if __name__ == "__main__":

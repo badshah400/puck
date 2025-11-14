@@ -7,8 +7,9 @@ import re
 from lxml import etree
 from packaging.version import parse, InvalidVersion, Version
 
+from .baseversion import UpstreamVersion
 
-class HepForgeVersion:
+class HepForgeVersion(UpstreamVersion):
     """Class for checking latest versions from HepForge"""
 
     def __init__(self, pkg_cache_dir: Path, url: str, src_url: str):
@@ -20,6 +21,7 @@ class HepForgeVersion:
 
         """
 
+        super().__init__()
         self._url: str = url
         self._src_url: str = src_url
 
@@ -58,12 +60,6 @@ class HepForgeVersion:
         if self.data.status_code != requests.codes["ok"]:
             self.data.raise_for_status()
 
-    def get_version(self) -> Version:
-        """Get version from list of downloads for source tarball
-
-        :returns: version as packaging.version object
-
-        """
         allowed_src_exts = [".7z", ".bz2", ".gz", ".rar", ".tar", ".tgz", ".xz", ".zip", "zst"]
         tar_prefix = re.compile("^[a-zA-Z_.-]+")
         html_name_nodes = etree.HTML(self.data.text).findall('.//*[@class="name"]/a')
@@ -82,10 +78,12 @@ class HepForgeVersion:
         except IndexError:
             raise RuntimeError(f"Unable to find list of downloads at {self.proj_url}.")
         try:
-            return parse(ver)
+            self.version = parse(ver)
         except InvalidVersion as e:
             raise e
 
+    def get_version(self) -> Version:
+        return self.version or parse("0.0.0")
 
 if __name__ == "__main__":
     pass

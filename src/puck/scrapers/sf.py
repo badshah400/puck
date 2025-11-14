@@ -7,9 +7,10 @@ from packaging.version import Version, parse
 import requests
 
 from puck.stdver import stdver
+from .baseversion import UpstreamVersion
 
 
-class SFVersion:
+class SFVersion(UpstreamVersion):
 
     """Class for checking upstream version from sourceforge"""
 
@@ -22,6 +23,7 @@ class SFVersion:
 
         """
 
+        super().__init__()
         sf_dlurl_re1 = re.compile(r"^downloads?\.(sourceforge|sf)\.net$")
         sf_dlurl_re2 = re.compile(r"^(sourceforge|sf)\.net$")
         sf_prjurl_re1 = re.compile(r"(sourceforge|sf)\.net/projects/?")
@@ -61,12 +63,7 @@ class SFVersion:
         self._pkg_cache_dir: Path = pkg_cache_dir
         self._url: str = url
         self._src_url: str = src_url
-        headers: dict[str, str] = {
-            "Accept": "*/*",
-            "User-Agent": "curl/8.14.1",
-            "cache-control": "no-cache",
-            "Connection": "keep-alive",
-        }
+        headers: dict[str, str] = UpstreamVersion.headers
         self.data: requests.Response = requests.get(
             f"https://sourceforge.net/projects/{self.sfproj}/best_release.json",
             headers=headers,
@@ -79,11 +76,6 @@ class SFVersion:
         else:
             self.data.raise_for_status()
 
-    def get_version(self) -> Version:
-        """Get version from decoded json data
-        :returns: version as a packaging.version object
-
-        """
         vertemp = r"[0-9]+" + r"(\.?[0-9]){0,6}" + r"([aA]lpha.*)?([Bb]eta.*)?"
         anyver = re.compile(f"[^a-zA-Z]{vertemp}")
         tarball_path = Path(self.json["release"]["filename"])
@@ -96,8 +88,11 @@ class SFVersion:
             if mat := anyver.search(f"{tarball_path.stem}"):
                 ver = mat.group()[1:]
 
-        return parse(stdver(ver.replace("_", "."), self.sfproj))
+        self.version = parse(stdver(ver.replace("_", "."), self.sfproj))
 
+    def get_version(self) -> Version:
+        """Return latest version from upstream"""
+        return self.version or parse("0.0.0")
 
 if __name__ == "__main__":
     pass

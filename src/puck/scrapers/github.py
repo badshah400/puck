@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# vim: set ai et ts=4 sw=4 tw=100 fileencoding=utf-8:
+# vim: set ai et ts=4 sw=4 tw=80 fileencoding=utf-8:
 
 from string import Template
 import re
@@ -10,9 +10,10 @@ from .base.feed_reader import AtomReader
 from puck.stdver import stdver
 from puck.metadata import load_cache_metadata, update_cache_metadata
 from typing import Any
+from .baseversion import UpstreamVersion
 
 
-class GithubVersion(AtomReader):
+class GithubVersion(AtomReader, UpstreamVersion):
     """
     Class to check version correspoding to latest tag from github
     """
@@ -21,7 +22,10 @@ class GithubVersion(AtomReader):
     ghuser: str = ""
     ghrepo: str = ""
 
-    def __init__(self, pkg_cache_dir: Path, url: str, src_url: str = ""):
+    def __init__(
+        self, pkg_cache_dir: Path, url: str, src_url: str = ""
+    ) -> None:
+        super(UpstreamVersion, self).__init__()
         try:
             ghuser, ghrepo = src_url.split("/")[3:5]
         except Exception as e:
@@ -68,10 +72,12 @@ class GithubVersion(AtomReader):
             else None
         )
 
-    def get_version(self) -> Version:
         if self.no_update:
-            return parse(self.metadata.get("version") or "0.0.0")
-        # Loop entries to get tag with valid version, max 5 times, otherwise give up
+            self.version = parse(self.metadata.get("version") or "0.0.0")
+            return
+
+        # Loop over feed entries to get tag with valid version, max 5 times,
+        # otherwise give up
         for cnt in range(0, self.MAX_ENTRIES):
             tag = self.get_tag_id(cnt)
             ver = stdver(tag, self.ghrepo)
@@ -87,7 +93,8 @@ class GithubVersion(AtomReader):
                 self.metadata["feed_metadata"]["modified"] = self.modified
                 self.metadata["version"] = str(version)
                 update_cache_metadata(self.metadata_file, self.metadata)
-                return version
+                self.version = version
+                return
             except InvalidVersion:
                 continue
             except Exception as e:
@@ -95,6 +102,8 @@ class GithubVersion(AtomReader):
 
         raise RuntimeError(f"Unable to obtain version from last {self.MAX_ENTRIES:d} tags")
 
+    def get_version(self) -> Version:
+        return self.version or parse("0.0.0")
 
 if __name__ == "__main__":
     pass
